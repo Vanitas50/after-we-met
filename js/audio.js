@@ -1,53 +1,37 @@
 /**
- * Audio manager — wraps the Web Audio API.
- * Ambient music file is optional; heartbeat is synthesized.
+ * Audio manager — synthesized ambient drone + heartbeat.
  */
 export function createAudio() {
   let ctx = null;
-  let ambientSource = null;
   let ambientGain = null;
-  let started = false;
 
   function ensureContext() {
-    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // iOS / some browsers start context suspended — resume on user gesture
+    if (ctx.state === 'suspended') ctx.resume();
   }
 
   async function startAmbient() {
     ensureContext();
-    if (ambientSource) return;
+    if (ambientGain) return; // already started
 
     ambientGain = ctx.createGain();
     ambientGain.gain.setValueAtTime(0, ctx.currentTime);
     ambientGain.connect(ctx.destination);
 
-    // Try loading ambient.mp3 if provided; otherwise generate a simple drone
-    try {
-      const resp = await fetch('audio/ambient.mp3');
-      if (resp.ok) {
-        const arrayBuffer = await resp.arrayBuffer();
-        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-        const src = ctx.createBufferSource();
-        src.buffer = audioBuffer;
-        src.loop = true;
-        src.connect(ambientGain);
-        src.start();
-        ambientSource = src;
-      } else {
-        throw new Error('no file');
-      }
-    } catch {
-      // Synthesize a soft drone
-      _synthDrone();
-    }
+    _synthDrone();
 
-    // Fade in
-    ambientGain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 3);
-    started = true;
+    // Gentle fade-in over 4 seconds
+    ambientGain.gain.linearRampToValueAtTime(0.28, ctx.currentTime + 4);
   }
 
   function _synthDrone() {
     ensureContext();
-    [55, 82.4, 110].forEach((freq, i) => {
+    // A-major triad at audible frequencies — A3 / E4 / A4
+    // (55 Hz is pure sub-bass, inaudible on phone speakers)
+    [220, 329.6, 440].forEach((freq, i) => {
       const osc  = ctx.createOscillator();
       const gain = ctx.createGain();
       const lfo  = ctx.createOscillator();
@@ -56,13 +40,16 @@ export function createAudio() {
       osc.type = 'sine';
       osc.frequency.value = freq;
 
+      // Slow vibrato
       lfo.type = 'sine';
-      lfo.frequency.value = 0.1 + i * 0.03;
-      lfoG.gain.value = 2;
+      lfo.frequency.value = 0.08 + i * 0.04;
+      lfoG.gain.value = 1.5;
 
       lfo.connect(lfoG);
       lfoG.connect(osc.frequency);
-      gain.gain.value = 0.04 / (i + 1);
+
+      // Upper partials are quieter
+      gain.gain.value = 0.22 / (i + 1);
       osc.connect(gain);
       gain.connect(ambientGain);
       lfo.start();
@@ -72,7 +59,6 @@ export function createAudio() {
 
   function heartbeat() {
     ensureContext();
-    // BUM sound via short sine burst
     const osc  = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';

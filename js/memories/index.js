@@ -471,47 +471,168 @@ function buildKunsthalle(group) {
 
   const PW = 2.6, PH = 1.85;
 
-  // Rotating canvas group — the entire painting swings like a pendulum
+  // Draw an impressionistic painting of the Kunsthalle Hamburg at night
+  function makePainting() {
+    const cv = document.createElement('canvas');
+    const W = 520, H = 370;
+    cv.width = W; cv.height = H;
+    const c = cv.getContext('2d');
+
+    // Deep indigo night sky
+    const sky = c.createLinearGradient(0, 0, 0, H * 0.72);
+    sky.addColorStop(0,   '#06041a');
+    sky.addColorStop(0.55,'#12103a');
+    sky.addColorStop(1,   '#1c1630');
+    c.fillStyle = sky; c.fillRect(0, 0, W, H);
+
+    // Stars
+    for (let i = 0; i < 55; i++) {
+      const a = 0.35 + Math.random() * 0.65;
+      c.fillStyle = `rgba(255,245,210,${a})`;
+      c.beginPath();
+      c.arc(Math.random() * W, Math.random() * H * 0.52, 0.5 + Math.random() * 1.3, 0, Math.PI * 2);
+      c.fill();
+    }
+
+    const gnd = H * 0.715;
+    const bL = W * 0.04, bR = W * 0.96, bTop = H * 0.16;
+
+    // Building body — warm ochre stone
+    const bGrad = c.createLinearGradient(bL, bTop, bL, gnd);
+    bGrad.addColorStop(0, '#c8b87a');
+    bGrad.addColorStop(0.5, '#d8c88e');
+    bGrad.addColorStop(1, '#b8a868');
+    c.fillStyle = bGrad; c.fillRect(bL, bTop, bR - bL, gnd - bTop);
+
+    // Triangular pediment above central portico
+    c.beginPath();
+    c.moveTo(bL + (bR - bL) * 0.20, bTop);
+    c.lineTo(bR - (bR - bL) * 0.20, bTop);
+    c.lineTo(W / 2, bTop - H * 0.10);
+    c.closePath();
+    c.fillStyle = '#c4b478'; c.fill();
+    c.strokeStyle = '#a89058'; c.lineWidth = 1.5; c.stroke();
+
+    // Cornice band
+    c.fillStyle = '#a89060';
+    c.fillRect(bL + (bR - bL) * 0.17, bTop, (bR - bL) * 0.66, H * 0.020);
+
+    // Columns — 6 Ionic columns in central portico
+    const cL = bL + (bR - bL) * 0.22, cR = bR - (bR - bL) * 0.22;
+    const colW = (cR - cL) / 14;
+    for (let i = 0; i < 6; i++) {
+      const cx = cL + (i + 0.5) * (cR - cL) / 6;
+      const cg = c.createLinearGradient(cx - colW, 0, cx + colW, 0);
+      cg.addColorStop(0,   '#989060');
+      cg.addColorStop(0.30,'#e0d0a0');
+      cg.addColorStop(0.70,'#d0c090');
+      cg.addColorStop(1,   '#908040');
+      c.fillStyle = cg;
+      c.fillRect(cx - colW, bTop + H * 0.020, colW * 2, gnd - bTop - H * 0.020);
+    }
+
+    // Windows — two rows, warm amber glow
+    const rows = [bTop + H * 0.12, bTop + H * 0.30];
+    const winXs = [0.14, 0.30, 0.50, 0.70, 0.86].map(t => bL + (bR - bL) * t);
+    const wW = (bR - bL) * 0.065, wH = H * 0.12;
+    rows.forEach(wy => {
+      winXs.forEach(wx => {
+        // Glow halo
+        const gw = c.createRadialGradient(wx, wy + wH / 2, 0, wx, wy + wH / 2, wW * 2.2);
+        gw.addColorStop(0,   'rgba(255,215,80,0.40)');
+        gw.addColorStop(1,   'rgba(255,185,50,0)');
+        c.fillStyle = gw;
+        c.fillRect(wx - wW * 2.2, wy - wH * 0.4, wW * 4.4, wH * 1.8);
+        // Pane
+        c.fillStyle = '#f2ce55';
+        c.fillRect(wx - wW / 2, wy, wW, wH);
+        // Dividers
+        c.strokeStyle = 'rgba(90,70,10,0.55)'; c.lineWidth = 1;
+        c.beginPath();
+        c.moveTo(wx, wy); c.lineTo(wx, wy + wH);
+        c.moveTo(wx - wW / 2, wy + wH / 2); c.lineTo(wx + wW / 2, wy + wH / 2);
+        c.stroke();
+      });
+    });
+
+    // Steps — 4 tiers
+    for (let s = 0; s < 4; s++) {
+      const sy = gnd + s * H * 0.040;
+      const sx = bL + s * (bR - bL) * 0.016;
+      c.fillStyle = `rgba(175,148,88,${0.88 - s * 0.18})`;
+      c.fillRect(sx, sy, bR - bL - s * (bR - bL) * 0.032, H * 0.040);
+    }
+
+    // Ground
+    const gg = c.createLinearGradient(0, gnd + H * 0.16, 0, H);
+    gg.addColorStop(0, '#1c1208'); gg.addColorStop(1, '#0a0806');
+    c.fillStyle = gg; c.fillRect(0, gnd + H * 0.160, W, H);
+
+    // Painterly brushstroke texture
+    c.globalAlpha = 0.07;
+    for (let i = 0; i < 90; i++) {
+      const bx = Math.random() * W, by = Math.random() * H;
+      const len = 4 + Math.random() * 18;
+      const angle = Math.random() * Math.PI;
+      c.strokeStyle = `hsl(${28 + Math.random() * 32},${28 + Math.random() * 22}%,${42 + Math.random() * 38}%)`;
+      c.lineWidth = 0.7 + Math.random() * 2.2; c.lineCap = 'round';
+      c.beginPath();
+      c.moveTo(bx - Math.cos(angle) * len / 2, by - Math.sin(angle) * len / 2);
+      c.lineTo(bx + Math.cos(angle) * len / 2, by + Math.sin(angle) * len / 2);
+      c.stroke();
+    }
+    c.globalAlpha = 1;
+
+    // Label
+    c.fillStyle = 'rgba(242,201,168,0.55)';
+    c.font = 'italic 300 18px Cormorant Garamond, Georgia, serif';
+    c.textAlign = 'center'; c.textBaseline = 'bottom';
+    c.fillText('Kunsthalle Hamburg', W / 2, H - 10);
+
+    // Vignette
+    const vig = c.createRadialGradient(W / 2, H / 2, H * 0.22, W / 2, H / 2, H * 0.80);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(0,0,0,0.52)');
+    c.fillStyle = vig; c.fillRect(0, 0, W, H);
+
+    return cv;
+  }
+
+  // Rotating canvas group — pendulum swing
   const canvasGroup = new THREE.Group();
   canvasGroup.position.set(0, 0.75, 0);
   group.add(canvasGroup);
 
-  // Rose-gold bloom behind (slightly bigger)
+  // Rose-gold bloom behind
   const bloomMat = new THREE.MeshBasicMaterial({ color: 0xf2c9a8, transparent: true, opacity: 0 });
   const bloom    = new THREE.Mesh(new THREE.PlaneGeometry(PW + 0.55, PH + 0.55), bloomMat);
   bloom.position.z = -0.02;
   canvasGroup.add(bloom);
 
-  // White frame
-  const frameMat = new THREE.MeshBasicMaterial({ color: 0xfff6ee, transparent: true, opacity: 0, side: THREE.DoubleSide });
+  // Golden frame
+  const frameMat = new THREE.MeshBasicMaterial({ color: 0xf5d878, transparent: true, opacity: 0, side: THREE.DoubleSide });
   const frame    = new THREE.Mesh(new THREE.PlaneGeometry(PW + 0.22, PH + 0.22), frameMat);
   canvasGroup.add(frame);
 
-  // Photo plane
-  const photoMat = new THREE.MeshBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0, side: THREE.DoubleSide });
-  const photoMesh = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), photoMat);
-  photoMesh.position.z = 0.01;
-  canvasGroup.add(photoMesh);
+  // Painting plane — canvas texture of Kunsthalle building
+  const paintTex = new THREE.CanvasTexture(makePainting());
+  paintTex.colorSpace = THREE.SRGBColorSpace;
+  const paintMat = new THREE.MeshBasicMaterial({ map: paintTex, transparent: true, opacity: 0, side: THREE.DoubleSide });
+  const paintMesh = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), paintMat);
+  paintMesh.position.z = 0.01;
+  canvasGroup.add(paintMesh);
 
-  // Track for island fade-in
   mats.push({ mat: bloomMat, target: 0.10 });
-  mats.push({ mat: frameMat, target: 0.97 });
-  mats.push({ mat: photoMat, target: 1.0  });
+  mats.push({ mat: frameMat, target: 0.92 });
+  mats.push({ mat: paintMat, target: 1.0  });
 
-  // Load photo
-  new THREE.TextureLoader().load('images/kunsthalle.jpg', tex => {
-    tex.colorSpace = THREE.SRGBColorSpace;
-    photoMat.map = tex;
-    photoMat.needsUpdate = true;
-  });
-
-  // White "Polaroid developing" overlay in front of photo
-  const devMat = new THREE.MeshBasicMaterial({ color: 0xfff8f2, transparent: true, opacity: 1.0, side: THREE.DoubleSide });
+  // White "unveiling" overlay — fades to reveal the painting
+  const devMat     = new THREE.MeshBasicMaterial({ color: 0xfff8f2, transparent: true, opacity: 1.0, side: THREE.DoubleSide });
   const devOverlay = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), devMat);
   devOverlay.position.z = 0.025;
   canvasGroup.add(devOverlay);
 
-  // Sparkle sprites floating around the painting
+  // Sparkle sprites
   const sparkles = [];
   for (let i = 0; i < 10; i++) {
     const sp = new THREE.Sprite(
@@ -522,6 +643,15 @@ function buildKunsthalle(group) {
     group.add(sp);
     sparkles.push({ sp, offset: Math.random() * Math.PI * 2, speed: 0.2 + Math.random() * 0.28 });
   }
+
+  // Window-light PointLights that flicker
+  const winLights = [];
+  [[-0.55, 0.20], [0, 0.20], [0.55, 0.20], [-0.55, -0.15], [0.55, -0.15]].forEach(([lx, ly]) => {
+    const wl = new THREE.PointLight(0xf2ce55, 0, 1.0);
+    wl.position.set(lx, ly, 0.15);
+    canvasGroup.add(wl);
+    winLights.push(wl);
+  });
 
   let devStart = null;
 
@@ -536,16 +666,15 @@ function buildKunsthalle(group) {
     const devT = Math.min((time - devStart) / 3.5, 1);
     const ease = devT * devT * (3 - 2 * devT);
 
-    // White overlay fades as photo "develops"
     devMat.opacity = 1 - ease;
-
-    // Pendulum swing — large enough to clearly show 3D rotation (±28°)
     canvasGroup.rotation.y = Math.sin(time * 0.32) * 0.49;
-
-    // Bloom glow pulses
     bloomMat.opacity = (0.06 + Math.sin(time * 0.75) * 0.03) * ease;
 
-    // Sparkles appear once developed
+    // Window lights flicker after painting revealed
+    winLights.forEach((wl, i) => {
+      wl.intensity = (0.18 + Math.sin(time * 1.8 + i * 1.3) * 0.06) * ease;
+    });
+
     sparkles.forEach(({ sp, offset, speed }) => {
       sp.position.y += speed * 0.003;
       if (sp.position.y > 2.8) sp.position.y = -0.6;
