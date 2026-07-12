@@ -7,8 +7,8 @@
   <title>After We Met</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Dancing+Script&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=6" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Dancing+Script:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=7" />
 </head>
 <body>
 
@@ -28,27 +28,15 @@
     </blockquote>
   </div>
 
-  <!-- Memory overlay — polaroid card + weiter button -->
-  <div id="memory-overlay">
-    <div class="memory-card-wrapper">
-      <div id="mem-count-display" class="mem-count"></div>
+  <!-- Memory info bar (bottom of screen during memories) -->
+  <div id="memory-label"></div>
 
-      <figure class="polaroid">
-        <div id="card-photo-area" class="card-photo">
-          <img id="memory-img" src="" alt="" crossorigin="anonymous" />
-          <span id="memory-icon" class="card-icon" aria-hidden="true"></span>
-        </div>
-        <figcaption id="memory-caption"></figcaption>
-      </figure>
-
-      <button id="weiter-btn">Weiter →</button>
-    </div>
-  </div>
+  <!-- Navigation button -->
+  <button id="weiter-btn">Weiter →</button>
 
   <canvas id="canvas"></canvas>
 
-  <!-- Floating hint (touch the heart) -->
-  <!-- injected by storyboard.js -->
+  <!-- hint injected by storyboard.js -->
 
   <script type="importmap">
     {

@@ -7,7 +7,7 @@
 body {
   background: #000;
   overflow: hidden;
-  font-family: 'Playfair Display', 'Georgia', serif;
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
 }
 
 #canvas {
@@ -29,9 +29,9 @@ body {
 }
 
 #start-screen p {
-  color: rgba(242, 201, 168, 0.55);
-  font-size: 0.8rem;
-  letter-spacing: 0.35em;
+  color: rgba(242, 201, 168, 0.5);
+  font-size: 0.78rem;
+  letter-spacing: 0.38em;
   text-transform: uppercase;
   animation: pulse 3s ease-in-out infinite;
 }
@@ -41,7 +41,7 @@ body {
   pointer-events: none;
 }
 
-/* ── Title / finale screen ── */
+/* ── Finale / title screen ── */
 #title-screen {
   position: fixed;
   inset: 0;
@@ -50,7 +50,6 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0);
   color: #f5d9c8;
   opacity: 0;
   pointer-events: none;
@@ -59,26 +58,24 @@ body {
   padding: 2rem;
 }
 
-#title-screen.visible {
-  opacity: 1;
-}
+#title-screen.visible { opacity: 1; }
 
 #title-screen h1 {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(2rem, 6vw, 5rem);
-  font-weight: 400;
-  letter-spacing: 0.3em;
+  font-weight: 300;
+  font-size: clamp(2rem, 6vw, 4.5rem);
+  letter-spacing: 0.35em;
   text-transform: uppercase;
   color: #f2c9a8;
-  margin-bottom: 2rem;
+  margin-bottom: 2.2rem;
   animation: fadeInUp 2s ease forwards;
 }
 
 #title-screen blockquote {
-  max-width: 560px;
+  max-width: 540px;
   font-style: italic;
-  font-size: clamp(0.85rem, 2vw, 1.05rem);
-  line-height: 1.9;
+  font-weight: 300;
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  line-height: 1.95;
   color: #c9a88a;
   border: none;
   animation: fadeInUp 2s ease 1s forwards;
@@ -88,111 +85,72 @@ body {
 #title-screen cite {
   display: block;
   margin-top: 1.2rem;
-  font-size: 0.8em;
+  font-size: 0.78em;
   letter-spacing: 0.12em;
   color: #b8906a;
   font-style: normal;
 }
 
-/* ── Memory overlay (polaroid card) ── */
-#memory-overlay {
+/* ── Memory label (name + caption + counter) ── */
+#memory-label {
   position: fixed;
-  inset: 0;
-  z-index: 25;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(3px);
+  bottom: 17vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  text-align: center;
+  white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 1.2s ease;
+  transition: opacity 1.5s ease;
 }
 
-#memory-overlay.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
+#memory-label.visible { opacity: 1; }
 
-.memory-card-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.4rem;
-}
-
-.mem-count {
-  color: rgba(242, 201, 168, 0.4);
-  font-size: 0.65rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  font-family: 'Playfair Display', serif;
-}
-
-/* Polaroid card */
-.polaroid {
-  background: #faf6f0;
-  padding: 14px 14px 52px;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3);
-  transform: rotate(-1deg);
-  max-width: 320px;
-  width: 82vw;
-  position: relative;
-}
-
-.card-photo {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #111;
-}
-
-.card-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+#memory-label .mem-count {
   display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  color: rgba(242, 201, 168, 0.38);
+  text-transform: uppercase;
+  margin-bottom: 0.45rem;
 }
 
-/* Icon shown when no photo is available */
-.card-icon {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(3rem, 12vw, 5rem);
-  pointer-events: none;
+#memory-label .mem-name {
+  display: block;
+  font-size: clamp(0.9rem, 2.5vw, 1.15rem);
+  letter-spacing: 0.28em;
+  color: #f2c9a8;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
 }
 
-
-.polaroid figcaption {
+#memory-label .mem-caption {
+  display: block;
   font-family: 'Dancing Script', cursive;
-  font-size: clamp(1rem, 3.5vw, 1.2rem);
-  color: #2a1808;
-  text-align: center;
-  padding: 10px 6px 0;
-  letter-spacing: 0.02em;
-  line-height: 1.4;
+  font-size: clamp(0.95rem, 2.8vw, 1.2rem);
+  color: rgba(242, 201, 168, 0.7);
+  letter-spacing: 0.03em;
 }
 
-/* ── Weiter button (inside overlay) ── */
+/* ── Weiter / navigation button ── */
 #weiter-btn {
+  position: fixed;
+  bottom: 9vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
   background: transparent;
-  border: 1px solid rgba(242, 201, 168, 0.4);
-  color: rgba(242, 201, 168, 0.9);
-  font-family: 'Playfair Display', serif;
+  border: 1px solid rgba(242, 201, 168, 0.35);
+  color: rgba(242, 201, 168, 0.88);
+  font-family: 'Cormorant Garamond', serif;
   font-size: 0.78rem;
   letter-spacing: 0.35em;
   padding: 0.75rem 2.2rem;
   cursor: pointer;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.6s ease, background 0.25s ease, border-color 0.25s ease;
+  transition: opacity 0.8s ease, background 0.25s ease, border-color 0.25s ease;
   text-transform: uppercase;
 }
 
@@ -202,8 +160,8 @@ body {
 }
 
 #weiter-btn:hover {
-  background: rgba(242, 201, 168, 0.08);
-  border-color: rgba(242, 201, 168, 0.7);
+  background: rgba(242, 201, 168, 0.07);
+  border-color: rgba(242, 201, 168, 0.65);
 }
 
 /* ── Heartbeat hint ── */
@@ -213,9 +171,9 @@ body {
   left: 50%;
   transform: translateX(-50%);
   z-index: 15;
-  color: rgba(242, 201, 168, 0.6);
+  color: rgba(242, 201, 168, 0.58);
   font-size: 0.75rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   pointer-events: none;
   opacity: 0;
   transition: opacity 2s ease;
@@ -227,11 +185,11 @@ body {
 
 /* ── Keyframes ── */
 @keyframes pulse {
-  0%, 100% { opacity: 0.35; }
-  50%       { opacity: 0.85; }
+  0%, 100% { opacity: 0.32; }
+  50%       { opacity: 0.88; }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }
 }

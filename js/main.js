@@ -66,12 +66,6 @@ const pointer    = new THREE.Vector2();
 const startScreen = document.getElementById('start-screen');
 const weiterBtn   = document.getElementById('weiter-btn');
 
-// Memory overlay: block all 3D interaction while card is shown
-const memoryOverlay = document.getElementById('memory-overlay');
-if (memoryOverlay) {
-  memoryOverlay.addEventListener('pointerdown', e => e.stopPropagation());
-}
-
 // Weiter button: advance memory
 if (weiterBtn) {
   weiterBtn.addEventListener('pointerdown', e => {

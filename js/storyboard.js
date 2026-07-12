@@ -31,12 +31,8 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
   hint.textContent = '✦  touch the heart  ✦';
   document.body.appendChild(hint);
 
-  const overlay    = document.getElementById('memory-overlay');
-  const memImg     = document.getElementById('memory-img');
-  const memCaption = document.getElementById('memory-caption');
-  const memCounter = document.getElementById('mem-count-display');
-  const memIcon    = document.getElementById('memory-icon');
-  const weiterBtn  = document.getElementById('weiter-btn');
+  const memoryLabel = document.getElementById('memory-label');
+  const weiterBtn   = document.getElementById('weiter-btn');
 
   function _makeParticle(color) {
     const geo  = new THREE.SphereGeometry(0.09, 12, 12);
@@ -65,41 +61,6 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     phaseTime = 0;
   }
 
-  const cardPhotoArea = document.getElementById('card-photo-area');
-
-  function _showMemoryCard(index) {
-    if (!overlay) return;
-
-    const photo   = memories.getPhoto(index);
-    const caption = memories.getCaption(index);
-    const color   = memories.getColor(index);
-    const icon    = memories.getIcon(index);
-
-    if (memImg) {
-      if (photo) {
-        memImg.src = photo;
-        memImg.style.display = 'block';
-      } else {
-        memImg.src = '';
-        memImg.style.display = 'none';
-      }
-    }
-
-    if (cardPhotoArea) {
-      cardPhotoArea.style.background = photo ? '#000' : color;
-    }
-
-    if (memIcon) {
-      memIcon.textContent  = icon;
-      memIcon.style.display = photo ? 'none' : 'flex';
-    }
-
-    if (memCaption) memCaption.textContent = caption;
-    if (memCounter) memCounter.textContent = `${index + 1}  /  ${memories.count}`;
-
-    overlay.classList.add('visible');
-  }
-
   function _nextMemory() {
     currentMemoryIndex++;
 
@@ -108,7 +69,22 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
       return;
     }
 
-    _showMemoryCard(currentMemoryIndex);
+    memories.showMemory(currentMemoryIndex);
+
+    // Camera orbits to face the diorama photo panel
+    const pos = memories.getPosition(currentMemoryIndex);
+    camTarget.set(pos.x * 1.9, 1.8, pos.z * 1.9);
+
+    // Label: counter + name + caption
+    if (memoryLabel) {
+      const name    = memories.getLabel(currentMemoryIndex);
+      const caption = memories.getCaption(currentMemoryIndex);
+      memoryLabel.innerHTML =
+        `<span class="mem-count">${currentMemoryIndex + 1}  /  ${memories.count}</span>` +
+        `<span class="mem-name">${name}</span>` +
+        `<span class="mem-caption">${caption}</span>`;
+      memoryLabel.classList.add('visible');
+    }
 
     if (weiterBtn) {
       const isLast = currentMemoryIndex === memories.count - 1;
@@ -124,8 +100,8 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     audio.fadeOutAmbient(3);
     camTarget.set(0, 0, 9);
 
-    if (overlay)   overlay.classList.remove('visible');
-    if (weiterBtn) weiterBtn.classList.remove('visible');
+    if (memoryLabel) memoryLabel.classList.remove('visible');
+    if (weiterBtn)   weiterBtn.classList.remove('visible');
 
     setTimeout(() => {
       const titleScreen = document.getElementById('title-screen');
@@ -151,10 +127,10 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
   function handleWeiterClick() {
     if (phase !== PHASE.MEMORIES) return;
 
-    if (overlay)   overlay.classList.remove('visible');
-    if (weiterBtn) weiterBtn.classList.remove('visible');
+    if (memoryLabel) memoryLabel.classList.remove('visible');
+    if (weiterBtn)   weiterBtn.classList.remove('visible');
 
-    setTimeout(() => _nextMemory(), 800);
+    setTimeout(() => _nextMemory(), 700);
   }
 
   function update(delta, _scene) {
