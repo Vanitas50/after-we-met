@@ -93,17 +93,18 @@ body {
   font-style: normal;
 }
 
-/* ── Memory label (appears below a diorama) ── */
+/* ── Memory label (appears above weiter button) ── */
 #memory-label {
   position: fixed;
-  bottom: 8vh;
+  bottom: 18vh;
   left: 50%;
   transform: translateX(-50%);
   z-index: 15;
   color: #f2c9a8;
-  font-size: 1rem;
-  letter-spacing: 0.3em;
+  font-size: 1.1rem;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
+  text-align: center;
   opacity: 0;
   pointer-events: none;
   transition: opacity 1.5s ease;
@@ -111,6 +112,45 @@ body {
 
 #memory-label.visible {
   opacity: 1;
+}
+
+.mem-count {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: rgba(242, 201, 168, 0.45);
+  margin-bottom: 0.5rem;
+}
+
+/* ── Weiter button ── */
+#weiter-btn {
+  position: fixed;
+  bottom: 9vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  background: transparent;
+  border: 1px solid rgba(242, 201, 168, 0.35);
+  color: rgba(242, 201, 168, 0.85);
+  font-family: 'Georgia', serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.35em;
+  padding: 0.75rem 2.2rem;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1s ease, background 0.25s ease, border-color 0.25s ease;
+  text-transform: uppercase;
+}
+
+#weiter-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#weiter-btn:hover {
+  background: rgba(242, 201, 168, 0.07);
+  border-color: rgba(242, 201, 168, 0.65);
 }
 
 /* ── Heartbeat hint ── */

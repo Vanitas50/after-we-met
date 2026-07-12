@@ -64,6 +64,15 @@ const raycaster  = new THREE.Raycaster();
 const pointer    = new THREE.Vector2();
 
 const startScreen = document.getElementById('start-screen');
+const weiterBtn   = document.getElementById('weiter-btn');
+
+// Weiter button: advance memory, don't bubble to pointerdown
+if (weiterBtn) {
+  weiterBtn.addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    storyboard.handleWeiterClick();
+  });
+}
 
 function onPointerDown(e) {
   pointer.x =  (e.clientX / window.innerWidth)  * 2 - 1;
