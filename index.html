@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>After We Met</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="overlay">
+    <div id="start-screen">
+      <!-- intentionally empty – first interaction is clicking the heart -->
+    </div>
+  </div>
+
+  <div id="title-screen">
+    <h1>After We Met</h1>
+    <blockquote>
+      "And among His signs is that He created for you spouses from among
+      yourselves so that you may find tranquility in them; and He placed
+      between you affection and mercy."
+      <cite>— Qur'an 30:21</cite>
+    </blockquote>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <!-- Three.js via CDN -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

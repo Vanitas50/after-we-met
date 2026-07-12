@@ -1,0 +1,127 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000;
+  overflow: hidden;
+  font-family: 'Georgia', serif;
+}
+
+#canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* ── Overlay (first frame, invisible – just blocks clicks before ready) ── */
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ── Title screen (shown at the end) ── */
+#title-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0);
+  color: #f5d9c8;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 3s ease;
+  text-align: center;
+  padding: 2rem;
+}
+
+#title-screen.visible {
+  opacity: 1;
+}
+
+#title-screen h1 {
+  font-size: clamp(2rem, 6vw, 5rem);
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #f2c9a8;
+  margin-bottom: 2rem;
+  animation: fadeInUp 2s ease forwards;
+}
+
+#title-screen blockquote {
+  max-width: 600px;
+  font-style: italic;
+  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  line-height: 1.8;
+  color: #c9a88a;
+  border: none;
+  animation: fadeInUp 2s ease 1s forwards;
+  opacity: 0;
+}
+
+#title-screen cite {
+  display: block;
+  margin-top: 1rem;
+  font-size: 0.85em;
+  letter-spacing: 0.1em;
+  color: #b8906a;
+  font-style: normal;
+}
+
+/* ── Memory label (appears below a diorama) ── */
+#memory-label {
+  position: fixed;
+  bottom: 8vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  color: #f2c9a8;
+  font-size: 1rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.5s ease;
+}
+
+#memory-label.visible {
+  opacity: 1;
+}
+
+/* ── Heartbeat hint ── */
+#hint {
+  position: fixed;
+  bottom: 5vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  color: rgba(242, 201, 168, 0.6);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 2s ease;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+#hint.visible {
+  opacity: 1;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
