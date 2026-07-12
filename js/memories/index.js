@@ -187,6 +187,35 @@ function buildFlottbek(group) {
     group.add(leaves);
   });
 
+  // School building between the trees
+  const buildMat = new THREE.MeshStandardMaterial({ color: 0x8a7a6a, roughness: 0.85 });
+  const building = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.38, 0.28), buildMat);
+  building.position.set(0.12, -0.16, 0.05);
+  group.add(building);
+
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x5a4535, roughness: 0.8 });
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(0.44, 0.24, 4), roofMat);
+  roof.rotation.y = Math.PI / 4;
+  roof.position.set(0.12, 0.05, 0.05);
+  group.add(roof);
+
+  // Windows — slightly warm glow
+  const winMat = new THREE.MeshBasicMaterial({ color: 0xfff5c0 });
+  [-0.16, 0.16].forEach(x => {
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.01), winMat);
+    win.position.set(0.12 + x, -0.16, 0.145);
+    group.add(win);
+  });
+  const winGlow = new THREE.PointLight(0xfff5a0, 0.6, 1.0);
+  winGlow.position.set(0.12, -0.16, 0.22);
+  group.add(winGlow);
+
+  // Door
+  const doorMat = new THREE.MeshBasicMaterial({ color: 0x3d2a18 });
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 0.01), doorMat);
+  door.position.set(0.12, -0.235, 0.145);
+  group.add(door);
+
   // "FLOTTBEK" glowing pink text
   const flottbekTex = textTex(['FLOTTBEK'], {
     w: 512, h: 128, color: '#ff88bb',

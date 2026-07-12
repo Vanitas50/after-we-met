@@ -43,6 +43,20 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
   const memoryLabel = document.getElementById('memory-label');
   const weiterBtn   = document.getElementById('weiter-btn');
 
+  // ── Circular glow texture (avoids square sprite hitbox) ──────────────────
+  function _glowTex(r, g, b) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const ctx = c.getContext('2d');
+    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0,    `rgba(${r},${g},${b},1)`);
+    grad.addColorStop(0.45, `rgba(${r},${g},${b},0.35)`);
+    grad.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  }
+
   // ── Particle builders ────────────────────────────────────────────────────
   function _makeHimParticle() {
     const group = new THREE.Group();
@@ -54,11 +68,11 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     );
     group.add(mesh);
 
-    // White glow sprite — always faces camera, no angle issues
+    // Circular white glow sprite
     const sprite = new THREE.Sprite(
-      new THREE.SpriteMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }),
+      new THREE.SpriteMaterial({ map: _glowTex(238, 238, 255), transparent: true, opacity: 0.75 }),
     );
-    sprite.scale.set(0.58, 0.58, 1);
+    sprite.scale.set(0.65, 0.65, 1);
     group.add(sprite);
 
     const glow = new THREE.PointLight(0xeeeeff, 9, 6);
@@ -76,11 +90,11 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     );
     group.add(mesh);
 
-    // Pink glow sprite
+    // Circular pink glow sprite
     const sprite = new THREE.Sprite(
-      new THREE.SpriteMaterial({ color: 0xff88cc, transparent: true, opacity: 0.55 }),
+      new THREE.SpriteMaterial({ map: _glowTex(255, 136, 204), transparent: true, opacity: 0.72 }),
     );
-    sprite.scale.set(0.50, 0.50, 1);
+    sprite.scale.set(0.56, 0.56, 1);
     group.add(sprite);
 
     const glow = new THREE.PointLight(0xff99cc, 10, 6);
