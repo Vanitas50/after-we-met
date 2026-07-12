@@ -145,8 +145,8 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
         break;
 
       case PHASE.PARTICLE_1:
-        p1.position.x = -6 + phaseTime * 0.8;
-        if (phaseTime > 3) {
+        p1.position.x = -6 + phaseTime * 2.5;
+        if (phaseTime > 1.5) {
           phase = PHASE.PARTICLE_2;
           phaseTime = 0;
           p2.visible = true;
@@ -155,9 +155,9 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
         break;
 
       case PHASE.PARTICLE_2:
-        p1.position.x = -6 + (3 + phaseTime) * 0.8;
-        p2.position.x = 6 - phaseTime * 0.8;
-        if (phaseTime > 2.5) {
+        p1.position.x = -6 + (1.5 + phaseTime) * 2.5;
+        p2.position.x = 6 - phaseTime * 2.5;
+        if (phaseTime > 1.2) {
           phase = PHASE.MISS;
           phaseTime = 0;
         }
@@ -165,14 +165,13 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
 
       case PHASE.MISS: {
         // Almost meet but miss
-        const t = phaseTime / 4;
+        const t = phaseTime / 1.5;
         const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-        p1.position.x = -2.5 + ease * 3;
-        p2.position.x = 2.5 - ease * 3;
-        p1.position.y = Math.sin(phaseTime * 1.2) * 0.3;
-        p2.position.y = -Math.sin(phaseTime * 1.2) * 0.3;
-        if (phaseTime > 4) {
-          // They separate
+        p1.position.x = -1.5 + ease * 2;
+        p2.position.x = 1.5 - ease * 2;
+        p1.position.y = Math.sin(phaseTime * 2) * 0.25;
+        p2.position.y = -Math.sin(phaseTime * 2) * 0.25;
+        if (phaseTime > 1.5) {
           phase = PHASE.MEET;
           phaseTime = 0;
         }
@@ -181,13 +180,12 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
 
       case PHASE.MEET: {
         // Second attempt — they meet
-        const t = Math.min(phaseTime / 2, 1);
-        p1.position.x = (-2.5 + t * 2.5);
-        p2.position.x = (2.5 - t * 2.5);
+        const t = Math.min(phaseTime / 1, 1);
+        p1.position.x = (-1.5 + t * 1.5);
+        p2.position.x = (1.5 - t * 1.5);
         p1.position.y = 0;
         p2.position.y = 0;
-        if (phaseTime > 2) {
-          // Silence moment, then heart forms
+        if (phaseTime > 1) {
           p1.visible = false;
           p2.visible = false;
           audio.heartbeatDouble(500);
@@ -204,12 +202,12 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
           heart.group.scale.setScalar(0.01);
         }
         {
-          const s = Math.min(phaseTime / 3, 1);
+          const s = Math.min(phaseTime / 2, 1);
           const eased = 1 - Math.pow(1 - s, 3);
           heart.group.scale.setScalar(eased);
         }
         particles.triggerHeartbeat();
-        if (phaseTime > 5) {
+        if (phaseTime > 2.5) {
           phase = PHASE.HEART_LIVE;
           phaseTime = 0;
           heart.triggerHeartbeat();
@@ -223,8 +221,8 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
           particles.triggerHeartbeat();
         }
         // Camera drift closer
-        camTarget.set(0, 0.5, 7 - phaseTime * 0.08);
-        if (phaseTime > 8) {
+        camTarget.set(0, 0.5, 7 - phaseTime * 0.1);
+        if (phaseTime > 2) {
           phase = PHASE.HINT;
           phaseTime = 0;
           heart.showHint(true);
