@@ -521,53 +521,12 @@ function buildKunsthalle(group) {
   wall.position.set(0, 0.65, -0.70);
   group.add(wall);
 
-  // Abstract expressionist painting canvas
-  const PW = 1.18, PH = 0.86;
+  // "The Meeting of Jacob and Rachel" — William Dyce (public domain)
+  const PW = 1.0, PH = 1.0;
 
-  function makePainting() {
-    const cv = document.createElement('canvas');
-    const W = 354, H = 258;
-    cv.width = W; cv.height = H;
-    const c = cv.getContext('2d');
-    c.fillStyle = '#ede0cc'; c.fillRect(0, 0, W, H);
-
-    // Abstract expressionist color fields
-    [
-      [0,       0,       W*0.42, H*0.58, 'rgba(180,74,56,0.60)'],
-      [W*0.42,  0,       W*0.58, H*0.48, 'rgba(56,92,178,0.55)'],
-      [0,       H*0.58,  W*0.62, H*0.42, 'rgba(70,158,108,0.52)'],
-      [W*0.62,  H*0.48,  W*0.38, H*0.52, 'rgba(205,168,52,0.58)'],
-      [W*0.20,  H*0.25,  W*0.60, H*0.50, 'rgba(240,220,180,0.16)'],
-    ].forEach(([x,y,w,h,col]) => { c.fillStyle = col; c.fillRect(x, y, w, h); });
-
-    // Impressionistic brushstrokes
-    for (let i = 0; i < 80; i++) {
-      const x = Math.random()*W, y = Math.random()*H;
-      const len = 8 + Math.random()*30, ang = Math.random()*Math.PI;
-      c.strokeStyle = `hsla(${Math.floor(Math.random()*360)},55%,52%,${0.10+Math.random()*0.24})`;
-      c.lineWidth = 1.5 + Math.random()*4.5; c.lineCap = 'round';
-      c.beginPath();
-      c.moveTo(x - Math.cos(ang)*len/2, y - Math.sin(ang)*len/2);
-      c.lineTo(x + Math.cos(ang)*len/2, y + Math.sin(ang)*len/2);
-      c.stroke();
-    }
-
-    // Two silhouettes — him (dark, left) and her (pink, right) inside the painting
-    c.fillStyle = 'rgba(28,22,48,0.42)';
-    c.beginPath(); c.ellipse(W*0.37, H*0.70, W*0.062, H*0.17, 0, 0, Math.PI*2); c.fill();
-    c.beginPath(); c.ellipse(W*0.37, H*0.48, W*0.052, H*0.062, 0, 0, Math.PI*2); c.fill();
-    c.fillStyle = 'rgba(200,80,120,0.36)';
-    c.beginPath(); c.ellipse(W*0.54, H*0.70, W*0.052, H*0.155, 0, 0, Math.PI*2); c.fill();
-    c.beginPath(); c.ellipse(W*0.54, H*0.49, W*0.046, H*0.056, 0, 0, Math.PI*2); c.fill();
-
-    const vg = c.createRadialGradient(W/2,H/2,H*0.08,W/2,H/2,H*0.75);
-    vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.30)');
-    c.fillStyle = vg; c.fillRect(0, 0, W, H);
-    return cv;
-  }
-
-  const paintTex = new THREE.CanvasTexture(makePainting());
-  paintTex.colorSpace = THREE.SRGBColorSpace;
+  const paintTex = new THREE.TextureLoader().load('images/jacob-rachel.jpg', tex => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+  });
   const paintMat = new THREE.MeshBasicMaterial({ map: paintTex, transparent: true, opacity: 0 });
   const paintMesh = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), paintMat);
   paintMesh.position.set(0, 0.55, -0.68);
@@ -641,7 +600,7 @@ function buildKunsthalle(group) {
       transparent: true, side: THREE.DoubleSide,
     }),
   );
-  kunstMesh.position.set(0, 1.08, 0);
+  kunstMesh.position.set(0, 1.14, 0);
   group.add(kunstMesh);
 
   // Gold sparkles at frame corners
@@ -658,7 +617,7 @@ function buildKunsthalle(group) {
   });
 
   function update(time) {
-    kunstMesh.position.y = 1.08 + Math.sin(time * 1.1) * 0.022;
+    kunstMesh.position.y = 1.14 + Math.sin(time * 1.1) * 0.022;
     spot.intensity = 2.8 + Math.sin(time * 0.7) * 0.28;
 
     himBody.position.y = himSprite.position.y = himLightK.position.y =
