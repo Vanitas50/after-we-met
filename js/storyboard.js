@@ -214,28 +214,36 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
       case PHASE.IDLE:
         break;
 
-      // Particles sweep in from far sides, land exactly at orbit start positions
+      // Fly in from opposite sides, land at orbit start (angle=0 → x=±3.5, y=0, z=0)
       case PHASE.ENTER: {
         const t    = Math.min(phaseTime / 1.5, 1);
         const ease = 1 - Math.pow(1 - t, 3);
-        // Orbit at angle=0 starts at (3.5, 0.28, 0) and (-3.5, -0.28, 0)
-        p1.position.set(-7 + 10.5 * ease,  1.2 - 0.92 * ease, 0);
-        p2.position.set( 7 - 10.5 * ease, -1.2 + 0.92 * ease, 0);
+        p1.position.set(-7 + 10.5 * ease, 0, 0);  // → (3.5, 0, 0)
+        p2.position.set( 7 - 10.5 * ease, 0, 0);  // → (-3.5, 0, 0)
 
         if (t >= 1) { phase = PHASE.ORBIT; phaseTime = 0; }
         break;
       }
 
-      // Clear circular orbit, spiraling inward — no position jump at transition
+      // XY-plane orbit — camera at +Z sees a clear circle, not a line
       case PHASE.ORBIT: {
-        const duration = 3.2;
+        const duration = 3.5;
         const t        = Math.min(phaseTime / duration, 1);
-        // Radius 3.5 → 0.7, speed increases for drama
-        const radius = 3.5 - t * 2.8;
-        const speed  = 1.2 + t * 4.5;
-        const angle  = phaseTime * speed;
-        p1.position.set( Math.cos(angle) * radius,  0.28 * (1 - t),  Math.sin(angle) * radius * 0.5);
-        p2.position.set(-Math.cos(angle) * radius, -0.28 * (1 - t), -Math.sin(angle) * radius * 0.5);
+        const radius   = 3.5 - t * 2.85;          // 3.5 → 0.65
+        const speed    = 1.8 + t * 5.0;            // accelerates as they close in
+        const angle    = phaseTime * speed;
+
+        // XY orbit: camera at (0,0,10) sees this as a proper circle
+        p1.position.set(
+           Math.cos(angle) * radius,
+           Math.sin(angle) * radius * 0.8,
+           Math.sin(angle * 0.6) * 0.35,           // subtle Z ripple for depth
+        );
+        p2.position.set(
+          -Math.cos(angle) * radius,
+          -Math.sin(angle) * radius * 0.8,
+          -Math.sin(angle * 0.6) * 0.35,
+        );
 
         if (t >= 1) {
           missP1.copy(p1.position);
@@ -245,19 +253,20 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
         break;
       }
 
-      // Near miss — rush past each other at offset heights
+      // Rush through center at different Y heights — a near-miss
+      // Continuous: at ease=0, positions equal missP1/missP2 exactly (no jump)
       case PHASE.MISS: {
-        const t    = Math.min(phaseTime / 0.5, 1);
+        const t    = Math.min(phaseTime / 0.55, 1);
         const ease = t * t * (3 - 2 * t);
         p1.position.set(
-          missP1.x * (1 - ease) - missP2.x * ease,
-           0.45 * (1 - 2 * ease),
-          missP1.z * (1 - ease) - missP2.z * ease,
+          missP1.x * (1 - 2 * ease),          // rushes from missP1.x through 0 to the other side
+          missP1.y + 0.5 * ease,               // rises — passes above p2
+          missP1.z * (1 - 2 * ease),
         );
         p2.position.set(
-          -missP1.x * (1 - ease) + missP2.x * ease,
-          -0.45 * (1 - 2 * ease),
-          -missP1.z * (1 - ease) + missP2.z * ease,
+          missP2.x * (1 - 2 * ease),
+          missP2.y - 0.5 * ease,               // falls — passes below p1
+          missP2.z * (1 - 2 * ease),
         );
 
         if (t >= 1) {
@@ -268,11 +277,21 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
         break;
       }
 
-      // Drift apart briefly — moment of uncertainty
+      // Slow drift — moment of hesitation before they turn back
       case PHASE.RECOVER: {
-        const t = Math.min(phaseTime / 0.7, 1);
-        p1.position.lerp(new THREE.Vector3(-0.9,  0.3, 0), t * 0.06);
-        p2.position.lerp(new THREE.Vector3( 0.9, -0.3, 0), t * 0.06);
+        const t    = Math.min(phaseTime / 0.8, 1);
+        const ease = t * t * (3 - 2 * t);
+        // Drift slightly further apart from miss-end positions
+        p1.position.set(
+          missP1.x + (missP1.x > 0 ? 0.3 : -0.3) * ease,
+          missP1.y * (1 - ease * 0.3),
+          missP1.z,
+        );
+        p2.position.set(
+          missP2.x + (missP2.x > 0 ? 0.3 : -0.3) * ease,
+          missP2.y * (1 - ease * 0.3),
+          missP2.z,
+        );
 
         if (t >= 1) {
           missP1.copy(p1.position);
@@ -282,10 +301,10 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
         break;
       }
 
-      // They find each other — direct lerp fully to center
+      // They come back — direct smoothstep to center, fully reaches (0,0,0)
       case PHASE.MEET: {
-        const t    = Math.min(phaseTime / 1.1, 1);
-        const ease = t * t * (3 - 2 * t); // smoothstep
+        const t    = Math.min(phaseTime / 1.2, 1);
+        const ease = t * t * (3 - 2 * t);
         p1.position.set(
           missP1.x * (1 - ease),
           missP1.y * (1 - ease),
