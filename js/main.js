@@ -63,10 +63,17 @@ const storyboard = createStoryboard({
 const raycaster  = new THREE.Raycaster();
 const pointer    = new THREE.Vector2();
 
+const startScreen = document.getElementById('start-screen');
+
 function onPointerDown(e) {
   pointer.x =  (e.clientX / window.innerWidth)  * 2 - 1;
   pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
+
+  // Hide start screen on first click
+  if (startScreen && !startScreen.classList.contains('hidden')) {
+    startScreen.classList.add('hidden');
+  }
 
   // Start storyboard on very first click anywhere
   storyboard.start(scene);

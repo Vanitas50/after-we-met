@@ -16,11 +16,28 @@ body {
   height: 100vh;
 }
 
-/* ── Overlay (first frame, invisible – just blocks clicks before ready) ── */
-#overlay {
+/* ── Start screen ── */
+#start-screen {
   position: fixed;
   inset: 0;
-  z-index: 10;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 1.5s ease;
+}
+
+#start-screen p {
+  color: rgba(242, 201, 168, 0.55);
+  font-size: 0.8rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+#start-screen.hidden {
+  opacity: 0;
   pointer-events: none;
 }
 
@@ -109,11 +126,11 @@ body {
   pointer-events: none;
   opacity: 0;
   transition: opacity 2s ease;
-  animation: pulse 3s ease-in-out infinite;
 }
 
+/* animation only kicks in once visible class is added */
 #hint.visible {
-  opacity: 1;
+  animation: pulse 3s ease-in-out infinite;
 }
 
 @keyframes pulse {
