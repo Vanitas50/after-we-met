@@ -9,12 +9,24 @@ import { createAudio } from './audio.js';
 
 // ── Renderer ───────────────────────────────────────────────────────────────
 const canvas = document.getElementById('canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+} catch (err) {
+  // WebGL not available — show a fallback message
+  document.getElementById('start-screen').style.display = 'none';
+  const msg = document.createElement('div');
+  msg.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#f2c9a8;font-family:serif;font-size:1rem;text-align:center;padding:2rem;';
+  msg.textContent = 'Dein Browser unterstützt kein WebGL. Bitte öffne die Seite in Chrome oder Safari.';
+  document.body.appendChild(msg);
+  throw err; // stop execution — nothing else can run without a renderer
+}
 
 // ── Scene ──────────────────────────────────────────────────────────────────
 const scene = new THREE.Scene();

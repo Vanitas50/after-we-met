@@ -358,10 +358,9 @@ function buildCafe(group) {
 
   // Bigger cup: saucer r=0.32, cup r=0.19/0.16 h=0.29
   function addCup(xPos) {
-    group.add(Object.assign(
-      new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.28, 0.035, 32), saucerMat.clone()),
-      { position: new THREE.Vector3(xPos, -0.20, 0) },
-    ));
+    const saucer = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.28, 0.035, 32), saucerMat.clone());
+    saucer.position.set(xPos, -0.20, 0);
+    group.add(saucer);
 
     const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.155, 0.29, 32), ceramicMat.clone());
     cup.position.set(xPos, -0.04, 0);
