@@ -252,9 +252,48 @@ function buildFlottbek(group) {
   kursMesh.position.set(0, 0.42, 0);
   group.add(kursMesh);
 
+  // Him — dark sphere + glow, standing in front of school
+  const himBody = new THREE.Mesh(
+    new THREE.SphereGeometry(0.10, 14, 14),
+    new THREE.MeshBasicMaterial({ color: 0x2a2a4e }),
+  );
+  himBody.position.set(-0.13, -0.14, 0.50);
+  group.add(himBody);
+  const himSprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: circleTex(220, 220, 255), transparent: true, opacity: 0.55 }),
+  );
+  himSprite.scale.set(0.42, 0.42, 1);
+  himSprite.position.copy(himBody.position);
+  group.add(himSprite);
+  const himLight = new THREE.PointLight(0xaaaaff, 0.5, 0.8);
+  himLight.position.copy(himBody.position);
+  group.add(himLight);
+
+  // Her — pink sphere + glow
+  const herBody = new THREE.Mesh(
+    new THREE.SphereGeometry(0.09, 14, 14),
+    new THREE.MeshBasicMaterial({ color: 0xff6699 }),
+  );
+  herBody.position.set(0.10, -0.14, 0.50);
+  group.add(herBody);
+  const herSprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: circleTex(255, 136, 204), transparent: true, opacity: 0.50 }),
+  );
+  herSprite.scale.set(0.38, 0.38, 1);
+  herSprite.position.copy(herBody.position);
+  group.add(herSprite);
+  const herLight = new THREE.PointLight(0xff99cc, 0.7, 0.8);
+  herLight.position.copy(herBody.position);
+  group.add(herLight);
+
   function update(time) {
     flottbekMesh.position.y = 0.85 + Math.sin(time * 1.2) * 0.03;
     winGlow.intensity = 0.55 + Math.sin(time * 2.5) * 0.18;
+    // orbs gently bob
+    himBody.position.y = himSprite.position.y = himLight.position.y = -0.14 + Math.sin(time * 1.4) * 0.022;
+    herBody.position.y = herSprite.position.y = herLight.position.y = -0.14 + Math.sin(time * 1.4 + 0.5) * 0.022;
+    himLight.intensity = 0.40 + Math.sin(time * 1.9) * 0.10;
+    herLight.intensity = 0.60 + Math.sin(time * 1.7) * 0.15;
   }
 
   return { mats, pointLight, update };
@@ -469,220 +508,172 @@ function buildCafe(group) {
 function buildKunsthalle(group) {
   const { mats, pointLight } = makeBase(group, { color: 0x10100e, light: 0xf0d8c0 });
 
-  const PW = 2.6, PH = 1.85;
+  // Museum marble floor
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x6a5e52, roughness: 0.22, metalness: 0.18 });
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(1.65, 40), floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -0.37;
+  group.add(floor);
 
-  // Draw an impressionistic painting of the Kunsthalle Hamburg at night
+  // Back museum wall
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0xc8b89a, roughness: 0.88 });
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 2.8), wallMat);
+  wall.position.set(0, 0.65, -0.70);
+  group.add(wall);
+
+  // Abstract expressionist painting canvas
+  const PW = 1.18, PH = 0.86;
+
   function makePainting() {
     const cv = document.createElement('canvas');
-    const W = 520, H = 370;
+    const W = 354, H = 258;
     cv.width = W; cv.height = H;
     const c = cv.getContext('2d');
+    c.fillStyle = '#ede0cc'; c.fillRect(0, 0, W, H);
 
-    // Deep indigo night sky
-    const sky = c.createLinearGradient(0, 0, 0, H * 0.72);
-    sky.addColorStop(0,   '#06041a');
-    sky.addColorStop(0.55,'#12103a');
-    sky.addColorStop(1,   '#1c1630');
-    c.fillStyle = sky; c.fillRect(0, 0, W, H);
+    // Abstract expressionist color fields
+    [
+      [0,       0,       W*0.42, H*0.58, 'rgba(180,74,56,0.60)'],
+      [W*0.42,  0,       W*0.58, H*0.48, 'rgba(56,92,178,0.55)'],
+      [0,       H*0.58,  W*0.62, H*0.42, 'rgba(70,158,108,0.52)'],
+      [W*0.62,  H*0.48,  W*0.38, H*0.52, 'rgba(205,168,52,0.58)'],
+      [W*0.20,  H*0.25,  W*0.60, H*0.50, 'rgba(240,220,180,0.16)'],
+    ].forEach(([x,y,w,h,col]) => { c.fillStyle = col; c.fillRect(x, y, w, h); });
 
-    // Stars
-    for (let i = 0; i < 55; i++) {
-      const a = 0.35 + Math.random() * 0.65;
-      c.fillStyle = `rgba(255,245,210,${a})`;
+    // Impressionistic brushstrokes
+    for (let i = 0; i < 80; i++) {
+      const x = Math.random()*W, y = Math.random()*H;
+      const len = 8 + Math.random()*30, ang = Math.random()*Math.PI;
+      c.strokeStyle = `hsla(${Math.floor(Math.random()*360)},55%,52%,${0.10+Math.random()*0.24})`;
+      c.lineWidth = 1.5 + Math.random()*4.5; c.lineCap = 'round';
       c.beginPath();
-      c.arc(Math.random() * W, Math.random() * H * 0.52, 0.5 + Math.random() * 1.3, 0, Math.PI * 2);
-      c.fill();
-    }
-
-    const gnd = H * 0.715;
-    const bL = W * 0.04, bR = W * 0.96, bTop = H * 0.16;
-
-    // Building body — warm ochre stone
-    const bGrad = c.createLinearGradient(bL, bTop, bL, gnd);
-    bGrad.addColorStop(0, '#c8b87a');
-    bGrad.addColorStop(0.5, '#d8c88e');
-    bGrad.addColorStop(1, '#b8a868');
-    c.fillStyle = bGrad; c.fillRect(bL, bTop, bR - bL, gnd - bTop);
-
-    // Triangular pediment above central portico
-    c.beginPath();
-    c.moveTo(bL + (bR - bL) * 0.20, bTop);
-    c.lineTo(bR - (bR - bL) * 0.20, bTop);
-    c.lineTo(W / 2, bTop - H * 0.10);
-    c.closePath();
-    c.fillStyle = '#c4b478'; c.fill();
-    c.strokeStyle = '#a89058'; c.lineWidth = 1.5; c.stroke();
-
-    // Cornice band
-    c.fillStyle = '#a89060';
-    c.fillRect(bL + (bR - bL) * 0.17, bTop, (bR - bL) * 0.66, H * 0.020);
-
-    // Columns — 6 Ionic columns in central portico
-    const cL = bL + (bR - bL) * 0.22, cR = bR - (bR - bL) * 0.22;
-    const colW = (cR - cL) / 14;
-    for (let i = 0; i < 6; i++) {
-      const cx = cL + (i + 0.5) * (cR - cL) / 6;
-      const cg = c.createLinearGradient(cx - colW, 0, cx + colW, 0);
-      cg.addColorStop(0,   '#989060');
-      cg.addColorStop(0.30,'#e0d0a0');
-      cg.addColorStop(0.70,'#d0c090');
-      cg.addColorStop(1,   '#908040');
-      c.fillStyle = cg;
-      c.fillRect(cx - colW, bTop + H * 0.020, colW * 2, gnd - bTop - H * 0.020);
-    }
-
-    // Windows — two rows, warm amber glow
-    const rows = [bTop + H * 0.12, bTop + H * 0.30];
-    const winXs = [0.14, 0.30, 0.50, 0.70, 0.86].map(t => bL + (bR - bL) * t);
-    const wW = (bR - bL) * 0.065, wH = H * 0.12;
-    rows.forEach(wy => {
-      winXs.forEach(wx => {
-        // Glow halo
-        const gw = c.createRadialGradient(wx, wy + wH / 2, 0, wx, wy + wH / 2, wW * 2.2);
-        gw.addColorStop(0,   'rgba(255,215,80,0.40)');
-        gw.addColorStop(1,   'rgba(255,185,50,0)');
-        c.fillStyle = gw;
-        c.fillRect(wx - wW * 2.2, wy - wH * 0.4, wW * 4.4, wH * 1.8);
-        // Pane
-        c.fillStyle = '#f2ce55';
-        c.fillRect(wx - wW / 2, wy, wW, wH);
-        // Dividers
-        c.strokeStyle = 'rgba(90,70,10,0.55)'; c.lineWidth = 1;
-        c.beginPath();
-        c.moveTo(wx, wy); c.lineTo(wx, wy + wH);
-        c.moveTo(wx - wW / 2, wy + wH / 2); c.lineTo(wx + wW / 2, wy + wH / 2);
-        c.stroke();
-      });
-    });
-
-    // Steps — 4 tiers
-    for (let s = 0; s < 4; s++) {
-      const sy = gnd + s * H * 0.040;
-      const sx = bL + s * (bR - bL) * 0.016;
-      c.fillStyle = `rgba(175,148,88,${0.88 - s * 0.18})`;
-      c.fillRect(sx, sy, bR - bL - s * (bR - bL) * 0.032, H * 0.040);
-    }
-
-    // Ground
-    const gg = c.createLinearGradient(0, gnd + H * 0.16, 0, H);
-    gg.addColorStop(0, '#1c1208'); gg.addColorStop(1, '#0a0806');
-    c.fillStyle = gg; c.fillRect(0, gnd + H * 0.160, W, H);
-
-    // Painterly brushstroke texture
-    c.globalAlpha = 0.07;
-    for (let i = 0; i < 90; i++) {
-      const bx = Math.random() * W, by = Math.random() * H;
-      const len = 4 + Math.random() * 18;
-      const angle = Math.random() * Math.PI;
-      c.strokeStyle = `hsl(${28 + Math.random() * 32},${28 + Math.random() * 22}%,${42 + Math.random() * 38}%)`;
-      c.lineWidth = 0.7 + Math.random() * 2.2; c.lineCap = 'round';
-      c.beginPath();
-      c.moveTo(bx - Math.cos(angle) * len / 2, by - Math.sin(angle) * len / 2);
-      c.lineTo(bx + Math.cos(angle) * len / 2, by + Math.sin(angle) * len / 2);
+      c.moveTo(x - Math.cos(ang)*len/2, y - Math.sin(ang)*len/2);
+      c.lineTo(x + Math.cos(ang)*len/2, y + Math.sin(ang)*len/2);
       c.stroke();
     }
-    c.globalAlpha = 1;
 
-    // Label
-    c.fillStyle = 'rgba(242,201,168,0.55)';
-    c.font = 'italic 300 18px Cormorant Garamond, Georgia, serif';
-    c.textAlign = 'center'; c.textBaseline = 'bottom';
-    c.fillText('Kunsthalle Hamburg', W / 2, H - 10);
+    // Two silhouettes — him (dark, left) and her (pink, right) inside the painting
+    c.fillStyle = 'rgba(28,22,48,0.42)';
+    c.beginPath(); c.ellipse(W*0.37, H*0.70, W*0.062, H*0.17, 0, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.ellipse(W*0.37, H*0.48, W*0.052, H*0.062, 0, 0, Math.PI*2); c.fill();
+    c.fillStyle = 'rgba(200,80,120,0.36)';
+    c.beginPath(); c.ellipse(W*0.54, H*0.70, W*0.052, H*0.155, 0, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.ellipse(W*0.54, H*0.49, W*0.046, H*0.056, 0, 0, Math.PI*2); c.fill();
 
-    // Vignette
-    const vig = c.createRadialGradient(W / 2, H / 2, H * 0.22, W / 2, H / 2, H * 0.80);
-    vig.addColorStop(0, 'rgba(0,0,0,0)');
-    vig.addColorStop(1, 'rgba(0,0,0,0.52)');
-    c.fillStyle = vig; c.fillRect(0, 0, W, H);
-
+    const vg = c.createRadialGradient(W/2,H/2,H*0.08,W/2,H/2,H*0.75);
+    vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.30)');
+    c.fillStyle = vg; c.fillRect(0, 0, W, H);
     return cv;
   }
 
-  // Rotating canvas group — pendulum swing
-  const canvasGroup = new THREE.Group();
-  canvasGroup.position.set(0, 0.75, 0);
-  group.add(canvasGroup);
-
-  // Rose-gold bloom behind
-  const bloomMat = new THREE.MeshBasicMaterial({ color: 0xf2c9a8, transparent: true, opacity: 0 });
-  const bloom    = new THREE.Mesh(new THREE.PlaneGeometry(PW + 0.55, PH + 0.55), bloomMat);
-  bloom.position.z = -0.02;
-  canvasGroup.add(bloom);
-
-  // Golden frame
-  const frameMat = new THREE.MeshBasicMaterial({ color: 0xf5d878, transparent: true, opacity: 0, side: THREE.DoubleSide });
-  const frame    = new THREE.Mesh(new THREE.PlaneGeometry(PW + 0.22, PH + 0.22), frameMat);
-  canvasGroup.add(frame);
-
-  // Painting plane — canvas texture of Kunsthalle building
   const paintTex = new THREE.CanvasTexture(makePainting());
   paintTex.colorSpace = THREE.SRGBColorSpace;
-  const paintMat = new THREE.MeshBasicMaterial({ map: paintTex, transparent: true, opacity: 0, side: THREE.DoubleSide });
+  const paintMat = new THREE.MeshBasicMaterial({ map: paintTex, transparent: true, opacity: 0 });
   const paintMesh = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), paintMat);
-  paintMesh.position.z = 0.01;
-  canvasGroup.add(paintMesh);
+  paintMesh.position.set(0, 0.55, -0.68);
+  group.add(paintMesh);
+  mats.push({ mat: paintMat, target: 1.0 });
 
-  mats.push({ mat: bloomMat, target: 0.10 });
-  mats.push({ mat: frameMat, target: 0.92 });
-  mats.push({ mat: paintMat, target: 1.0  });
-
-  // White "unveiling" overlay — fades to reveal the painting
-  const devMat     = new THREE.MeshBasicMaterial({ color: 0xfff8f2, transparent: true, opacity: 1.0, side: THREE.DoubleSide });
-  const devOverlay = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), devMat);
-  devOverlay.position.z = 0.025;
-  canvasGroup.add(devOverlay);
-
-  // Sparkle sprites
-  const sparkles = [];
-  for (let i = 0; i < 10; i++) {
-    const sp = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: circleTex(242, 201, 168), transparent: true, opacity: 0 }),
-    );
-    sp.scale.set(0.09, 0.09, 1);
-    sp.position.set((Math.random() - 0.5) * 3.6, Math.random() * 2.6 - 0.5, (Math.random() - 0.5) * 0.4);
-    group.add(sp);
-    sparkles.push({ sp, offset: Math.random() * Math.PI * 2, speed: 0.2 + Math.random() * 0.28 });
-  }
-
-  // Window-light PointLights that flicker
-  const winLights = [];
-  [[-0.55, 0.20], [0, 0.20], [0.55, 0.20], [-0.55, -0.15], [0.55, -0.15]].forEach(([lx, ly]) => {
-    const wl = new THREE.PointLight(0xf2ce55, 0, 1.0);
-    wl.position.set(lx, ly, 0.15);
-    canvasGroup.add(wl);
-    winLights.push(wl);
+  // Gold ornate frame — four BoxGeometry bars
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0xd4a820, roughness: 0.25, metalness: 0.82 });
+  const FT = 0.068, FD = 0.028, fZ = -0.672;
+  [
+    [PW/2 + FT/2,     0.55,                    FT,             PH + FT*2],
+    [-(PW/2 + FT/2),  0.55,                    FT,             PH + FT*2],
+    [0,               0.55 + PH/2 + FT/2,      PW + FT*2,      FT],
+    [0,               0.55 - PH/2 - FT/2,      PW + FT*2,      FT],
+  ].forEach(([fx, fy, fw, fh]) => {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(fw, fh, FD), frameMat);
+    bar.position.set(fx, fy, fZ);
+    group.add(bar);
   });
 
-  let devStart = null;
+  // Museum ceiling spotlight over the painting
+  const spot = new THREE.SpotLight(0xfff8e8, 3.0, 4.0, Math.PI / 6, 0.5);
+  spot.position.set(0, 2.2, -0.22);
+  spot.target.position.set(0, 0.55, -0.68);
+  group.add(spot);
+  group.add(spot.target);
 
-  function reset() {
-    devStart = null;
-    devMat.opacity = 1.0;
-    devOverlay.visible = true;
-  }
+  // Him — dark sphere standing in front of painting
+  const himBody = new THREE.Mesh(
+    new THREE.SphereGeometry(0.12, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0x2a2a4e }),
+  );
+  himBody.position.set(-0.22, -0.12, 0.18);
+  group.add(himBody);
+  const himSprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: circleTex(220, 220, 255), transparent: true, opacity: 0.52 }),
+  );
+  himSprite.scale.set(0.50, 0.50, 1);
+  himSprite.position.copy(himBody.position);
+  group.add(himSprite);
+  const himLightK = new THREE.PointLight(0xaaaaff, 0.50, 1.0);
+  himLightK.position.copy(himBody.position);
+  group.add(himLightK);
+
+  // Her — pink sphere, close to him on the right
+  const herBody = new THREE.Mesh(
+    new THREE.SphereGeometry(0.10, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xff6699 }),
+  );
+  herBody.position.set(0.12, -0.12, 0.18);
+  group.add(herBody);
+  const herSprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: circleTex(255, 136, 204), transparent: true, opacity: 0.48 }),
+  );
+  herSprite.scale.set(0.44, 0.44, 1);
+  herSprite.position.copy(herBody.position);
+  group.add(herSprite);
+  const herLightK = new THREE.PointLight(0xff99cc, 0.80, 1.0);
+  herLightK.position.copy(herBody.position);
+  group.add(herLightK);
+
+  // Floating label
+  const kunstMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.0, 0.44),
+    new THREE.MeshBasicMaterial({
+      map: textTex(['KUNSTHALLE'], {
+        w: 512, h: 112, color: '#f2c9a8',
+        font: '300 62px Cormorant Garamond, Georgia, serif',
+        glow: '#f5d878',
+      }),
+      transparent: true, side: THREE.DoubleSide,
+    }),
+  );
+  kunstMesh.position.set(0, 1.08, 0);
+  group.add(kunstMesh);
+
+  // Gold sparkles at frame corners
+  const sparkles = [];
+  [[-PW/2-0.04, 0.55+PH/2+0.04], [PW/2+0.04, 0.55+PH/2+0.04],
+   [-PW/2-0.04, 0.55-PH/2-0.04], [PW/2+0.04, 0.55-PH/2-0.04]].forEach((cx, i) => {
+    const sp = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: circleTex(245, 216, 120), transparent: true, opacity: 0 }),
+    );
+    sp.scale.set(0.058, 0.058, 1);
+    sp.position.set(cx[0], cx[1], -0.62);
+    group.add(sp);
+    sparkles.push({ sp, offset: i * (Math.PI / 2) });
+  });
 
   function update(time) {
-    if (devStart === null) devStart = time;
-    const devT = Math.min((time - devStart) / 3.5, 1);
-    const ease = devT * devT * (3 - 2 * devT);
+    kunstMesh.position.y = 1.08 + Math.sin(time * 1.1) * 0.022;
+    spot.intensity = 2.8 + Math.sin(time * 0.7) * 0.28;
 
-    devMat.opacity = 1 - ease;
-    canvasGroup.rotation.y = Math.sin(time * 0.32) * 0.49;
-    bloomMat.opacity = (0.06 + Math.sin(time * 0.75) * 0.03) * ease;
+    himBody.position.y = himSprite.position.y = himLightK.position.y =
+      -0.12 + Math.sin(time * 1.3) * 0.024;
+    herBody.position.y = herSprite.position.y = herLightK.position.y =
+      -0.12 + Math.sin(time * 1.3 + 0.65) * 0.024;
+    himLightK.intensity = 0.42 + Math.sin(time * 1.9) * 0.10;
+    herLightK.intensity = 0.68 + Math.sin(time * 1.7) * 0.16;
 
-    // Window lights flicker after painting revealed
-    winLights.forEach((wl, i) => {
-      wl.intensity = (0.18 + Math.sin(time * 1.8 + i * 1.3) * 0.06) * ease;
-    });
-
-    sparkles.forEach(({ sp, offset, speed }) => {
-      sp.position.y += speed * 0.003;
-      if (sp.position.y > 2.8) sp.position.y = -0.6;
-      sp.material.opacity = Math.max(0, Math.sin(time * 1.4 + offset)) * 0.5 * ease;
+    sparkles.forEach(({ sp, offset }) => {
+      sp.material.opacity = Math.max(0, Math.sin(time * 1.3 + offset)) * 0.60;
     });
   }
 
-  return { mats, pointLight, update, reset };
+  return { mats, pointLight, update };
 }
 
 // ── Builder map ──────────────────────────────────────────────────────────────
