@@ -148,7 +148,7 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
 
     if (weiterBtn) {
       const isLast = currentMemoryIndex === memories.count - 1;
-      weiterBtn.textContent = isLast ? 'Finale ✦' : 'Weiter →';
+      weiterBtn.textContent = isLast ? 'für immer ✦' : 'Weiter →';
       weiterBtn.classList.add('visible');
     }
   }
@@ -158,7 +158,7 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     phaseTime = 0;
     heart.close();
     memories.hideAll();
-    audio.fadeOutAmbient(3);
+    // music keeps playing through the finale
     camTarget.set(0, 0, 9);
     cameraYield = false;
 
