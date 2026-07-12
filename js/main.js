@@ -137,9 +137,11 @@ function animate(now) {
   // Storyboard
   storyboard.update(delta, scene);
 
-  // Subtle camera parallax from mouse
-  camera.position.x += (mouse.x * 0.3 - camera.position.x) * 0.02;
-  camera.position.y += (-mouse.y * 0.2 - camera.position.y + 0.3) * 0.02;
+  // Mouse parallax only before memory orbit (storyboard takes full camera control then)
+  if (!storyboard.isOrbiting()) {
+    camera.position.x += (mouse.x * 0.3 - camera.position.x) * 0.02;
+    camera.position.y += (-mouse.y * 0.2 - camera.position.y + 0.3) * 0.02;
+  }
 
   renderer.render(scene, camera);
 }

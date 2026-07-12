@@ -72,8 +72,9 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     memories.showMemory(currentMemoryIndex);
 
     // Camera orbits to face the diorama photo panel
+    // pos is at radius 5; camera at radius ~11 looks at origin, panel is between them
     const pos = memories.getPosition(currentMemoryIndex);
-    camTarget.set(pos.x * 1.9, 1.8, pos.z * 1.9);
+    camTarget.set(pos.x * 2.2, 2.0, pos.z * 2.2);
 
     // Label: counter + name + caption
     if (memoryLabel) {
@@ -136,7 +137,9 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
   function update(delta, _scene) {
     phaseTime += delta;
 
-    camera.position.lerp(camTarget, 0.025);
+    // Faster lerp during orbit so mouse parallax can't fight it
+    const lerpSpeed = phase >= PHASE.MEMORIES ? 0.06 : 0.025;
+    camera.position.lerp(camTarget, lerpSpeed);
     camera.lookAt(0, 0, 0);
 
     switch (phase) {
@@ -211,5 +214,9 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     }
   }
 
-  return { start, update, handleHeartClick, handleWeiterClick, introParticles: [p1, p2] };
+  function isOrbiting() {
+    return started && phase >= PHASE.MEMORIES;
+  }
+
+  return { start, update, handleHeartClick, handleWeiterClick, introParticles: [p1, p2], isOrbiting };
 }
