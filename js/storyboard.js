@@ -18,20 +18,20 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
   let phase     = PHASE.IDLE;
   let phaseTime = 0;
 
-  // Him: dark navy sphere + white halo ring + white glow
   const p1 = _makeHimParticle();
-  // Her: pink sphere + pink glow
   const p2 = _makeHerParticle();
   p1.visible = false;
   p2.visible = false;
 
-  // Store miss-start positions for RECOVER/MEET
   const missP1 = new THREE.Vector3();
   const missP2 = new THREE.Vector3();
 
   camera.position.set(0, 0, 10);
   camera.lookAt(0, 0, 0);
   const camTarget = new THREE.Vector3(0, 0, 10);
+
+  // Camera yield: when true, storyboard skips lerp (user is orbiting)
+  let cameraYield = false;
 
   let currentMemoryIndex = -1;
 
@@ -43,24 +43,25 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
   const memoryLabel = document.getElementById('memory-label');
   const weiterBtn   = document.getElementById('weiter-btn');
 
+  // ── Particle builders ────────────────────────────────────────────────────
   function _makeHimParticle() {
     const group = new THREE.Group();
 
-    // Dark sphere
-    const geo = new THREE.SphereGeometry(0.13, 16, 16);
-    const mat = new THREE.MeshBasicMaterial({ color: 0x0a0a1a });
-    const mesh = new THREE.Mesh(geo, mat);
+    // Slightly visible dark sphere
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.12, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0x1a1a3a }),
+    );
     group.add(mesh);
 
-    // White outline ring (torus in XZ plane = ring around equator)
-    const ringGeo = new THREE.TorusGeometry(0.17, 0.022, 8, 48);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
-    const ring    = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2;
-    group.add(ring);
+    // White glow sprite — always faces camera, no angle issues
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }),
+    );
+    sprite.scale.set(0.58, 0.58, 1);
+    group.add(sprite);
 
-    // White glow
-    const glow = new THREE.PointLight(0xeeeeff, 6, 5);
+    const glow = new THREE.PointLight(0xeeeeff, 9, 6);
     group.add(glow);
 
     return group;
@@ -69,12 +70,20 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
   function _makeHerParticle() {
     const group = new THREE.Group();
 
-    const geo  = new THREE.SphereGeometry(0.11, 16, 16);
-    const mat  = new THREE.MeshBasicMaterial({ color: 0xff88bb });
-    const mesh = new THREE.Mesh(geo, mat);
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.10, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xff6699 }),
+    );
     group.add(mesh);
 
-    const glow = new THREE.PointLight(0xff99cc, 7, 5);
+    // Pink glow sprite
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({ color: 0xff88cc, transparent: true, opacity: 0.55 }),
+    );
+    sprite.scale.set(0.50, 0.50, 1);
+    group.add(sprite);
+
+    const glow = new THREE.PointLight(0xff99cc, 10, 6);
     group.add(glow);
 
     return group;
@@ -110,6 +119,7 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
 
     const pos = memories.getPosition(currentMemoryIndex);
     camTarget.set(pos.x * 2.2, 2.0, pos.z * 2.2);
+    cameraYield = false; // take camera back for the lerp to new position
 
     if (memoryLabel) {
       const name    = memories.getLabel(currentMemoryIndex);
@@ -135,13 +145,13 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     memories.hideAll();
     audio.fadeOutAmbient(3);
     camTarget.set(0, 0, 9);
+    cameraYield = false;
 
     if (memoryLabel) memoryLabel.classList.remove('visible');
     if (weiterBtn)   weiterBtn.classList.remove('visible');
 
     setTimeout(() => {
-      const titleScreen = document.getElementById('title-screen');
-      if (titleScreen) titleScreen.classList.add('visible');
+      document.getElementById('title-screen')?.classList.add('visible');
       if (onFinale) onFinale();
     }, 4000);
   }
@@ -170,12 +180,19 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     setTimeout(() => _nextMemory(), 700);
   }
 
+  function yieldCamera(v) {
+    // Only allow yield during MEMORIES phase
+    if (phase >= PHASE.MEMORIES) cameraYield = v;
+  }
+
   function update(delta, _scene) {
     phaseTime += delta;
 
-    const lerpSpeed = phase >= PHASE.MEMORIES ? 0.06 : 0.025;
-    camera.position.lerp(camTarget, lerpSpeed);
-    camera.lookAt(0, 0, 0);
+    if (!cameraYield) {
+      const lerpSpeed = phase >= PHASE.MEMORIES ? 0.06 : 0.025;
+      camera.position.lerp(camTarget, lerpSpeed);
+      camera.lookAt(0, 0, 0);
+    }
 
     switch (phase) {
 
@@ -189,78 +206,69 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
         p1.position.set(-6 + 6 * ease, 0.25, 0);
         p2.position.set( 6 - 6 * ease, -0.25, 0);
 
-        if (t >= 1) {
-          phase     = PHASE.ORBIT;
-          phaseTime = 0;
-        }
+        if (t >= 1) { phase = PHASE.ORBIT; phaseTime = 0; }
         break;
       }
 
-      // Spiral toward each other — orbit tightening
+      // Spiral toward each other
       case PHASE.ORBIT: {
         const duration = 2.8;
         const t        = Math.min(phaseTime / duration, 1);
-        // Radius shrinks from 3 → 0.6, speed increases
-        const radius  = 3 - t * 2.4;
-        const speed   = 1.5 + t * 3;
-        const angle   = phaseTime * speed;
-        p1.position.set( Math.cos(angle) * radius,  0.25 * (1 - t), Math.sin(angle) * radius * 0.4);
+        const radius   = 3 - t * 2.4;
+        const speed    = 1.5 + t * 3;
+        const angle    = phaseTime * speed;
+        p1.position.set( Math.cos(angle) * radius,  0.25 * (1 - t),  Math.sin(angle) * radius * 0.4);
         p2.position.set(-Math.cos(angle) * radius, -0.25 * (1 - t), -Math.sin(angle) * radius * 0.4);
 
         if (t >= 1) {
-          // Store positions before the miss
           missP1.copy(p1.position);
           missP2.copy(p2.position);
-          phase     = PHASE.MISS;
-          phaseTime = 0;
+          phase = PHASE.MISS; phaseTime = 0;
         }
         break;
       }
 
-      // They rush past each other at slightly different heights — a near miss
+      // Near miss — rush past each other at different Y heights
       case PHASE.MISS: {
-        const duration = 0.45;
-        const t        = Math.min(phaseTime / duration, 1);
-        const ease     = t * t * (3 - 2 * t); // smoothstep
-        // Rush through center but offset in Y so they miss
-        p1.position.set( missP1.x * (1 - ease) - missP2.x * ease,
-                         0.4 * (1 - 2 * ease),
-                         missP1.z * (1 - ease) - missP2.z * ease);
-        p2.position.set(-missP1.x * (1 - ease) + missP2.x * ease,
-                        -0.4 * (1 - 2 * ease),
-                        -missP1.z * (1 - ease) + missP2.z * ease);
+        const t    = Math.min(phaseTime / 0.45, 1);
+        const ease = t * t * (3 - 2 * t);
+        p1.position.set(
+          missP1.x * (1 - ease) - missP2.x * ease,
+          0.4 * (1 - 2 * ease),
+          missP1.z * (1 - ease) - missP2.z * ease,
+        );
+        p2.position.set(
+          -missP1.x * (1 - ease) + missP2.x * ease,
+          -0.4 * (1 - 2 * ease),
+          -missP1.z * (1 - ease) + missP2.z * ease,
+        );
 
         if (t >= 1) {
           missP1.copy(p1.position);
           missP2.copy(p2.position);
-          phase     = PHASE.RECOVER;
-          phaseTime = 0;
+          phase = PHASE.RECOVER; phaseTime = 0;
         }
         break;
       }
 
-      // Brief pause — they slow down after the miss
+      // Brief pause — they slow down
       case PHASE.RECOVER: {
-        const duration = 0.55;
-        const t        = Math.min(phaseTime / duration, 1);
-        // Drift slowly
+        const t = Math.min(phaseTime / 0.55, 1);
         p1.position.lerp(new THREE.Vector3(-0.7,  0.25, 0), t * 0.08);
         p2.position.lerp(new THREE.Vector3( 0.7, -0.25, 0), t * 0.08);
 
         if (t >= 1) {
           missP1.copy(p1.position);
           missP2.copy(p2.position);
-          phase     = PHASE.MEET;
-          phaseTime = 0;
+          phase = PHASE.MEET; phaseTime = 0;
         }
         break;
       }
 
       // They find each other and meet at the center
       case PHASE.MEET: {
-        const duration = 1.0;
-        const t        = Math.min(phaseTime / duration, 1);
-        const ease     = 1 - Math.pow(1 - t, 3);
+        const t    = Math.min(phaseTime / 1.0, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
         p1.position.lerp(new THREE.Vector3(0, 0, 0), ease * 0.12);
         p2.position.lerp(new THREE.Vector3(0, 0, 0), ease * 0.12);
 
@@ -268,8 +276,7 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
           p1.visible = false;
           p2.visible = false;
           audio.heartbeatDouble(250);
-          phase     = PHASE.HEART_FORM;
-          phaseTime = 0;
+          phase = PHASE.HEART_FORM; phaseTime = 0;
         }
         break;
       }
@@ -277,16 +284,13 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
       case PHASE.HEART_FORM: {
         if (phaseTime < 0.05) {
           heart.group.visible = true;
-          heart.group.scale.setScalar(0.01);
+          heart.fadeIn(); // smooth opacity fade-in via appear uniform
         }
-        const s = Math.min(phaseTime / 2, 1);
-        heart.group.scale.setScalar(1 - Math.pow(1 - s, 3));
 
         if (phaseTime % 0.5 < delta) particles.triggerHeartbeat();
 
-        if (phaseTime > 2.2) {
-          phase     = PHASE.HEART_LIVE;
-          phaseTime = 0;
+        if (phaseTime > 2.5) {
+          phase = PHASE.HEART_LIVE; phaseTime = 0;
           heart.triggerHeartbeat();
           camTarget.set(0, 0.5, 8);
         }
@@ -299,8 +303,7 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
           particles.triggerHeartbeat();
         }
         if (phaseTime > 1.8) {
-          phase     = PHASE.HINT;
-          phaseTime = 0;
+          phase = PHASE.HINT; phaseTime = 0;
           heart.showHint(true);
           hint.classList.add('visible');
         }
@@ -328,5 +331,5 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     return started && phase >= PHASE.MEMORIES;
   }
 
-  return { start, update, handleHeartClick, handleWeiterClick, introParticles: [p1, p2], isOrbiting };
+  return { start, update, handleHeartClick, handleWeiterClick, yieldCamera, introParticles: [p1, p2], isOrbiting };
 }

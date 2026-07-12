@@ -291,24 +291,21 @@ function buildAlster(group) {
 
   let leanStart = null;
 
+  function reset() { leanStart = null; herBody.position.set(0.1, 0.04, 0); }
+
   function update(time) {
-    // Start lean after ~3 s of being visible
     if (leanStart === null) leanStart = time + 3;
     const leanT = Math.max(0, Math.min((time - leanStart) / 4, 1));
     const ease  = leanT * leanT * (3 - 2 * leanT);
 
-    // Her sphere moves toward him
     herBody.position.set(0.1 - ease * 0.14, 0.04 - ease * 0.025, 0);
     herLight.position.copy(herBody.position);
 
-    // Water shimmer
     waterMat.roughness = 0.05 + Math.sin(time * 0.8) * 0.03;
-
-    // Rain drift
     rain.position.y = ((time * 0.8) % 0.5) * -0.18;
   }
 
-  return { mats, pointLight, update };
+  return { mats, pointLight, update, reset };
 }
 
 // ── Café ──────────────────────────────────────────────────────────────────────
@@ -426,7 +423,39 @@ function buildKunsthalle(group) {
   mats.push({ mat: frameMat,  target: 0.95 });
   mats.push({ mat: photoMat,  target: 1.0 });
 
-  function update(_time) {}
+  // Sparkle sprites floating around the photo
+  const sparkles = [];
+  for (let i = 0; i < 10; i++) {
+    const sp = new THREE.Sprite(
+      new THREE.SpriteMaterial({ color: 0xf2c9a8, transparent: true, opacity: 0 }),
+    );
+    sp.scale.set(0.07, 0.07, 1);
+    sp.position.set(
+      (Math.random() - 0.5) * 3.2,
+      Math.random() * 2.8 - 0.2,
+      (Math.random() - 0.5) * 0.4,
+    );
+    group.add(sp);
+    sparkles.push({ sp, offset: Math.random() * Math.PI * 2, speed: 0.25 + Math.random() * 0.35 });
+  }
+
+  function update(time) {
+    // Gentle sway of the entire photo/frame
+    const sway = Math.sin(time * 0.22) * 0.032;
+    bloom.rotation.y = sway;
+    frame.rotation.y = sway;
+    photoMesh.rotation.y = sway;
+
+    // Bloom pulse
+    bloomMat.opacity = 0.04 + Math.sin(time * 0.75) * 0.02;
+
+    // Sparkles drift upward and twinkle
+    sparkles.forEach(({ sp, offset, speed }) => {
+      sp.position.y += speed * 0.003;
+      if (sp.position.y > 2.8) sp.position.y = -0.5;
+      sp.material.opacity = Math.max(0, Math.sin(time * 1.4 + offset)) * 0.45;
+    });
+  }
 
   return { mats, pointLight, update };
 }
@@ -452,14 +481,14 @@ function createMemory(scene, def, position) {
   group.visible = false;
   scene.add(group);
 
-  const { mats, pointLight, update: buildUpdate } = def.build(group);
+  const { mats, pointLight, update: buildUpdate, reset: buildReset } = def.build(group);
 
   let isVisible = false;
   let opacity   = 0;
   const bob     = Math.random() * Math.PI * 2;
   let bobTime   = bob;
 
-  function show() { group.visible = true; isVisible = true; }
+  function show() { group.visible = true; isVisible = true; if (buildReset) buildReset(); }
   function hide() { isVisible = false; }
 
   function update(time) {

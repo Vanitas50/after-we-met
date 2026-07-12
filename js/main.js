@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createWorld } from './world.js';
 import { createHeart } from './heart.js';
 import { createParticles } from './particles.js';
@@ -58,6 +59,20 @@ const storyboard = createStoryboard({
   memories,
   onFinale: () => console.log('After We Met — fin.'),
 });
+
+// ── Orbit controls (active during memories so user can inspect each diorama) ──
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping  = false;
+controls.enablePan      = false;
+controls.minDistance    = 3;
+controls.maxDistance    = 20;
+controls.enabled        = false;
+
+let userDragging = false;
+renderer.domElement.addEventListener('pointerdown', () => {
+  if (storyboard.isOrbiting()) userDragging = true;
+});
+window.addEventListener('pointerup', () => { userDragging = false; });
 
 // ── Raycaster (click on heart) ────────────────────────────────────────────
 const raycaster  = new THREE.Raycaster();
@@ -134,11 +149,17 @@ function animate(now) {
   // Memories
   memories.update(time);
 
-  // Storyboard
+  // Storyboard (yield camera to user when dragging during memories)
+  const orbiting = storyboard.isOrbiting();
+  storyboard.yieldCamera(orbiting && userDragging);
   storyboard.update(delta, scene);
 
-  // Mouse parallax only before memory orbit (storyboard takes full camera control then)
-  if (!storyboard.isOrbiting()) {
+  // Orbit controls: sync state, apply user input
+  controls.enabled = orbiting;
+  if (controls.enabled) controls.update();
+
+  // Mouse parallax only before memory orbit
+  if (!orbiting) {
     camera.position.x += (mouse.x * 0.3 - camera.position.x) * 0.02;
     camera.position.y += (-mouse.y * 0.2 - camera.position.y + 0.3) * 0.02;
   }
