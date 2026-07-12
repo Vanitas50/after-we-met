@@ -2,6 +2,20 @@ import * as THREE from 'three';
 
 const RADIUS = 5;
 
+// ── Circular glow texture (for sprites) ──────────────────────────────────────
+function circleTex(r, g, b) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 32;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  grad.addColorStop(0,    `rgba(${r},${g},${b},1)`);
+  grad.addColorStop(0.45, `rgba(${r},${g},${b},0.3)`);
+  grad.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 32, 32);
+  return new THREE.CanvasTexture(c);
+}
+
 // ── Canvas text helper ────────────────────────────────────────────────────────
 function textTex(lines, { w = 512, h = 256, bg = 'transparent', color = '#f2c9a8',
   font = '300 52px Cormorant Garamond, Georgia, serif', align = 'center',
@@ -342,89 +356,111 @@ function buildCafe(group) {
   const coffeeMat  = new THREE.MeshBasicMaterial({ color: 0x3d1a08 });
   const saucerMat  = new THREE.MeshStandardMaterial({ color: 0xede8e0, roughness: 0.4 });
 
-  // Build one cup at xPos, return steam data
+  // Bigger cup: saucer r=0.32, cup r=0.19/0.16 h=0.29
   function addCup(xPos) {
-    const saucer = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.21, 0.03, 32), saucerMat.clone());
-    saucer.position.set(xPos, -0.22, 0);
-    group.add(saucer);
+    group.add(Object.assign(
+      new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.28, 0.035, 32), saucerMat.clone()),
+      { position: new THREE.Vector3(xPos, -0.20, 0) },
+    ));
 
-    const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.12, 0.21, 32), ceramicMat.clone());
-    cup.position.set(xPos, -0.075, 0);
+    const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.155, 0.29, 32), ceramicMat.clone());
+    cup.position.set(xPos, -0.04, 0);
     group.add(cup);
 
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(0.135, 32), coffeeMat.clone());
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(0.182, 32), coffeeMat.clone());
     disc.rotation.x = -Math.PI / 2;
-    disc.position.set(xPos, 0.03, 0);
+    disc.position.set(xPos, 0.108, 0);
     group.add(disc);
 
     const handle = new THREE.Mesh(
-      new THREE.TorusGeometry(0.072, 0.018, 8, 18, Math.PI),
+      new THREE.TorusGeometry(0.096, 0.022, 8, 20, Math.PI),
       ceramicMat.clone(),
     );
-    handle.position.set(xPos + 0.16, -0.075, 0);
+    handle.position.set(xPos + 0.215, -0.04, 0);
     handle.rotation.y = Math.PI / 2;
     group.add(handle);
 
-    // Steam — 3 wisps per cup
     const steams = [];
     for (let i = 0; i < 3; i++) {
-      const baseX = xPos + (i - 1) * 0.04;
+      const baseX = xPos + (i - 1) * 0.055;
       const s = new THREE.Mesh(
-        new THREE.SphereGeometry(0.025 + i * 0.008, 6, 6),
+        new THREE.SphereGeometry(0.03 + i * 0.01, 6, 6),
         new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 }),
       );
-      s.position.set(baseX, 0.05, 0);
+      s.position.set(baseX, 0.13, 0);
       group.add(s);
       steams.push({ mesh: s, baseX, offset: i * (Math.PI * 2 / 3) });
     }
     return steams;
   }
 
-  const steamsL = addCup(-0.38);
-  const steamsR = addCup( 0.38);
+  const steamsL = addCup(-0.48);
+  const steamsR = addCup( 0.48);
   const allSteams = [...steamsL, ...steamsR];
 
-  // Him — dark sphere to the left of left cup
-  const himMat  = new THREE.MeshBasicMaterial({ color: 0x1a1a3a });
-  const himBody = new THREE.Mesh(new THREE.SphereGeometry(0.1, 14, 14), himMat);
-  himBody.position.set(-0.78, -0.06, 0);
+  // Him — dark sphere, visible with white glow sprite
+  const himBody = new THREE.Mesh(
+    new THREE.SphereGeometry(0.14, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0x2a2a4e }),
+  );
+  himBody.position.set(-0.98, -0.02, 0);
   group.add(himBody);
 
-  // Her — pink sphere to the right of right cup
-  const herMat  = new THREE.MeshBasicMaterial({ color: 0xff6699 });
-  const herBody = new THREE.Mesh(new THREE.SphereGeometry(0.1, 14, 14), herMat);
-  herBody.position.set(0.78, -0.06, 0);
+  // White glow sprite so he's visible against dark bg
+  const himSprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: circleTex(220, 220, 255), transparent: true, opacity: 0.55 }),
+  );
+  himSprite.scale.set(0.52, 0.52, 1);
+  himSprite.position.copy(himBody.position);
+  group.add(himSprite);
+
+  const himLight = new THREE.PointLight(0xaaaaff, 0.6, 1.0);
+  himLight.position.copy(himBody.position);
+  group.add(himLight);
+
+  // Her — pink sphere
+  const herBody = new THREE.Mesh(
+    new THREE.SphereGeometry(0.14, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xff6699 }),
+  );
+  herBody.position.set(0.98, -0.02, 0);
   group.add(herBody);
 
-  const herLight = new THREE.PointLight(0xff99cc, 1.0, 1.2);
-  herLight.position.set(0.78, -0.06, 0.1);
+  const herSprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: circleTex(255, 136, 204), transparent: true, opacity: 0.5 }),
+  );
+  herSprite.scale.set(0.48, 0.48, 1);
+  herSprite.position.copy(herBody.position);
+  group.add(herSprite);
+
+  const herLight = new THREE.PointLight(0xff99cc, 1.2, 1.2);
+  herLight.position.copy(herBody.position);
   group.add(herLight);
 
   // Floating heart between the cups
-  const heartShape = new THREE.Shape();
-  heartShape.moveTo(0, 0);
-  heartShape.bezierCurveTo( 0,  0.06, -0.11,  0.06, -0.11, 0);
-  heartShape.bezierCurveTo(-0.11, -0.08, 0, -0.16, 0, -0.20);
-  heartShape.bezierCurveTo( 0, -0.16,  0.11, -0.08,  0.11, 0);
-  heartShape.bezierCurveTo( 0.11, 0.06,  0, 0.06,  0, 0);
-  const heartMat = new THREE.MeshBasicMaterial({
-    color: 0xff6688, transparent: true, opacity: 0.85, side: THREE.DoubleSide,
-  });
-  const floatHeart = new THREE.Mesh(new THREE.ShapeGeometry(heartShape), heartMat);
-  floatHeart.position.set(0, 0.55, 0);
+  const hs = new THREE.Shape();
+  hs.moveTo(0, 0);
+  hs.bezierCurveTo( 0,  0.07, -0.13,  0.07, -0.13, 0);
+  hs.bezierCurveTo(-0.13, -0.1, 0, -0.19, 0, -0.23);
+  hs.bezierCurveTo( 0, -0.19,  0.13, -0.1,  0.13, 0);
+  hs.bezierCurveTo( 0.13, 0.07,  0, 0.07,  0, 0);
+  const heartMat = new THREE.MeshBasicMaterial({ color: 0xff6688, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
+  const floatHeart = new THREE.Mesh(new THREE.ShapeGeometry(hs), heartMat);
+  floatHeart.position.set(0, 0.68, 0);
   group.add(floatHeart);
 
   function update(time) {
     allSteams.forEach(({ mesh, baseX, offset }) => {
       const t = ((time * 0.5 + offset) % 1);
-      mesh.position.y       = 0.05 + t * 0.45;
-      mesh.material.opacity = (t < 0.5 ? t * 2 : (1 - t) * 2) * 0.2;
-      mesh.position.x       = baseX + Math.sin(time * 0.9 + offset) * 0.03;
+      mesh.position.y       = 0.13 + t * 0.5;
+      mesh.material.opacity = (t < 0.5 ? t * 2 : (1 - t) * 2) * 0.22;
+      mesh.position.x       = baseX + Math.sin(time * 0.9 + offset) * 0.04;
     });
 
-    floatHeart.position.y = 0.55 + Math.sin(time * 1.8) * 0.07;
-    heartMat.opacity      = 0.6 + Math.sin(time * 2.2) * 0.27;
-    herLight.intensity    = 0.8 + Math.sin(time * 1.5) * 0.25;
+    floatHeart.position.y = 0.68 + Math.sin(time * 1.8) * 0.08;
+    heartMat.opacity      = 0.58 + Math.sin(time * 2.2) * 0.3;
+    herLight.intensity    = 0.9 + Math.sin(time * 1.5) * 0.3;
+    himLight.intensity    = 0.5 + Math.sin(time * 1.7) * 0.15;
   }
 
   return { mats, pointLight, update };
@@ -434,70 +470,60 @@ function buildCafe(group) {
 function buildKunsthalle(group) {
   const { mats, pointLight } = makeBase(group, { color: 0x10100e, light: 0xf0d8c0 });
 
-  const PW = 2.8, PH = 2.0;
+  const PW = 2.6, PH = 1.85;
 
-  // Subtle rose-gold bloom plane behind photo
-  const bloomMat = new THREE.MeshBasicMaterial({
-    color: 0xf2c9a8, transparent: true, opacity: 0,
-  });
-  const bloom = new THREE.Mesh(new THREE.PlaneGeometry(PW + 0.4, PH + 0.4), bloomMat);
-  bloom.position.set(0, 0.82, -0.01);
-  group.add(bloom);
+  // Rotating canvas group — the entire painting swings like a pendulum
+  const canvasGroup = new THREE.Group();
+  canvasGroup.position.set(0, 0.75, 0);
+  group.add(canvasGroup);
+
+  // Rose-gold bloom behind (slightly bigger)
+  const bloomMat = new THREE.MeshBasicMaterial({ color: 0xf2c9a8, transparent: true, opacity: 0 });
+  const bloom    = new THREE.Mesh(new THREE.PlaneGeometry(PW + 0.55, PH + 0.55), bloomMat);
+  bloom.position.z = -0.02;
+  canvasGroup.add(bloom);
 
   // White frame
-  const frameMat = new THREE.MeshBasicMaterial({
-    color: 0xfff8f2, transparent: true, opacity: 0, side: THREE.DoubleSide,
-  });
-  const frame = new THREE.Mesh(new THREE.PlaneGeometry(PW + 0.18, PH + 0.18), frameMat);
-  frame.position.set(0, 0.82, 0);
-  group.add(frame);
+  const frameMat = new THREE.MeshBasicMaterial({ color: 0xfff6ee, transparent: true, opacity: 0, side: THREE.DoubleSide });
+  const frame    = new THREE.Mesh(new THREE.PlaneGeometry(PW + 0.22, PH + 0.22), frameMat);
+  canvasGroup.add(frame);
 
-  // Photo
-  const photoMat = new THREE.MeshBasicMaterial({
-    color: 0x888888, side: THREE.DoubleSide, transparent: true, opacity: 0,
-  });
+  // Photo plane
+  const photoMat = new THREE.MeshBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0, side: THREE.DoubleSide });
   const photoMesh = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), photoMat);
-  photoMesh.position.set(0, 0.82, 0.01);
-  group.add(photoMesh);
+  photoMesh.position.z = 0.01;
+  canvasGroup.add(photoMesh);
+
+  // Track for island fade-in
+  mats.push({ mat: bloomMat, target: 0.10 });
+  mats.push({ mat: frameMat, target: 0.97 });
+  mats.push({ mat: photoMat, target: 1.0  });
 
   // Load photo
-  const loader = new THREE.TextureLoader();
-  loader.load('images/kunsthalle.jpg', tex => {
+  new THREE.TextureLoader().load('images/kunsthalle.jpg', tex => {
     tex.colorSpace = THREE.SRGBColorSpace;
     photoMat.map = tex;
     photoMat.needsUpdate = true;
   });
 
-  // Track in mats for fade
-  mats.push({ mat: bloomMat,  target: 0.06 });
-  mats.push({ mat: frameMat,  target: 0.95 });
-  mats.push({ mat: photoMat,  target: 1.0 });
-
-  // White "developing" overlay — fades away to reveal the photo (like a Polaroid)
-  const devMat = new THREE.MeshBasicMaterial({
-    color: 0xfff8f2, transparent: true, opacity: 1.0, side: THREE.DoubleSide,
-  });
+  // White "Polaroid developing" overlay in front of photo
+  const devMat = new THREE.MeshBasicMaterial({ color: 0xfff8f2, transparent: true, opacity: 1.0, side: THREE.DoubleSide });
   const devOverlay = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), devMat);
-  devOverlay.position.set(0, 0.82, 0.025);
-  group.add(devOverlay);
+  devOverlay.position.z = 0.025;
+  canvasGroup.add(devOverlay);
 
-  // Sparkle sprites
+  // Sparkle sprites floating around the painting
   const sparkles = [];
   for (let i = 0; i < 10; i++) {
     const sp = new THREE.Sprite(
-      new THREE.SpriteMaterial({ color: 0xf2c9a8, transparent: true, opacity: 0 }),
+      new THREE.SpriteMaterial({ map: circleTex(242, 201, 168), transparent: true, opacity: 0 }),
     );
-    sp.scale.set(0.08, 0.08, 1);
-    sp.position.set(
-      (Math.random() - 0.5) * 3.4,
-      Math.random() * 2.8 - 0.2,
-      (Math.random() - 0.5) * 0.3,
-    );
+    sp.scale.set(0.09, 0.09, 1);
+    sp.position.set((Math.random() - 0.5) * 3.6, Math.random() * 2.6 - 0.5, (Math.random() - 0.5) * 0.4);
     group.add(sp);
-    sparkles.push({ sp, offset: Math.random() * Math.PI * 2, speed: 0.22 + Math.random() * 0.3 });
+    sparkles.push({ sp, offset: Math.random() * Math.PI * 2, speed: 0.2 + Math.random() * 0.28 });
   }
 
-  // Developing timer — reset on each show
   let devStart = null;
 
   function reset() {
@@ -507,25 +533,24 @@ function buildKunsthalle(group) {
   }
 
   function update(time) {
-    // Photo developing: white overlay fades away over 3.5 s
     if (devStart === null) devStart = time;
     const devT = Math.min((time - devStart) / 3.5, 1);
-    devMat.opacity = 1 - devT * devT * (3 - 2 * devT); // smoothstep fade
+    const ease = devT * devT * (3 - 2 * devT);
 
-    // Gentle sway after fully developed
-    const sway = Math.sin(time * 0.22) * 0.035 * devT;
-    bloom.rotation.y = sway;
-    frame.rotation.y = sway;
-    photoMesh.rotation.y = sway;
-    devOverlay.rotation.y = sway;
+    // White overlay fades as photo "develops"
+    devMat.opacity = 1 - ease;
 
-    bloomMat.opacity = 0.04 + Math.sin(time * 0.75) * 0.02;
+    // Pendulum swing — large enough to clearly show 3D rotation (±28°)
+    canvasGroup.rotation.y = Math.sin(time * 0.32) * 0.49;
 
-    // Sparkles only visible after photo has developed
+    // Bloom glow pulses
+    bloomMat.opacity = (0.06 + Math.sin(time * 0.75) * 0.03) * ease;
+
+    // Sparkles appear once developed
     sparkles.forEach(({ sp, offset, speed }) => {
       sp.position.y += speed * 0.003;
-      if (sp.position.y > 2.8) sp.position.y = -0.5;
-      sp.material.opacity = Math.max(0, Math.sin(time * 1.4 + offset)) * 0.45 * devT;
+      if (sp.position.y > 2.8) sp.position.y = -0.6;
+      sp.material.opacity = Math.max(0, Math.sin(time * 1.4 + offset)) * 0.5 * ease;
     });
   }
 
