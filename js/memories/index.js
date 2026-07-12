@@ -166,57 +166,53 @@ function buildHackerSchool(group) {
 function buildFlottbek(group) {
   const { mats, pointLight } = makeBase(group, { color: 0x080f08, light: 0xaaffaa });
 
-  // Ground patch
   const groundMat = new THREE.MeshStandardMaterial({ color: 0x112211, roughness: 0.9 });
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(1.6, 32), groundMat);
+  const ground    = new THREE.Mesh(new THREE.CircleGeometry(1.6, 32), groundMat);
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.35;
   group.add(ground);
 
-  // Stylized trees
-  const treeMat   = new THREE.MeshStandardMaterial({ color: 0x1a3d1a, roughness: 0.8 });
-  const trunkMat  = new THREE.MeshStandardMaterial({ color: 0x3d2a1a, roughness: 0.9 });
-  const treePositions = [[-0.85, 0], [-0.4, -0.7], [0.6, -0.6], [0.9, 0.1], [0.2, 0.7]];
-  treePositions.forEach(([tx, tz]) => {
-    const h = 0.55 + Math.random() * 0.25;
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.25, 6), trunkMat);
-    trunk.position.set(tx, -0.22, tz);
+  // School building — centred and forward so it's always visible
+  const buildMat = new THREE.MeshStandardMaterial({ color: 0x9a8a7a, roughness: 0.82 });
+  const building = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.44, 0.32), buildMat);
+  building.position.set(0, -0.13, 0.18);
+  group.add(building);
+
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x5a4535, roughness: 0.78 });
+  const roof    = new THREE.Mesh(new THREE.ConeGeometry(0.52, 0.28, 4), roofMat);
+  roof.rotation.y = Math.PI / 4;
+  roof.position.set(0, 0.11, 0.18);
+  group.add(roof);
+
+  const winMat = new THREE.MeshBasicMaterial({ color: 0xfff5c0 });
+  [-0.2, 0.2].forEach(x => {
+    const win = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.01), winMat);
+    win.position.set(x, -0.12, 0.345);
+    group.add(win);
+  });
+  const winGlow = new THREE.PointLight(0xfff5a0, 0.7, 1.1);
+  winGlow.position.set(0, -0.12, 0.4);
+  group.add(winGlow);
+
+  const doorMat = new THREE.MeshBasicMaterial({ color: 0x3d2a18 });
+  const door    = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.17, 0.01), doorMat);
+  door.position.set(0, -0.215, 0.345);
+  group.add(door);
+
+  // Trees on the SIDES — not blocking the building (negative Z = behind building)
+  const treeMat  = new THREE.MeshStandardMaterial({ color: 0x1a4d1a, roughness: 0.8 });
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4d3520, roughness: 0.9 });
+  const treePos  = [[-0.9, -0.3], [-1.1, 0.1], [0.9, -0.35], [1.1, 0.05], [-0.5, -0.9], [0.5, -0.85]];
+  treePos.forEach(([tx, tz]) => {
+    const h     = 0.48 + Math.abs(tx) * 0.12;
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.22, 6), trunkMat);
+    trunk.position.set(tx, -0.24, tz);
     group.add(trunk);
-    const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.22, h, 8), treeMat);
-    leaves.position.set(tx, -0.22 + 0.12 + h / 2, tz);
+    const leaves = new THREE.Mesh(new THREE.ConeGeometry(0.19, h, 7), treeMat);
+    leaves.position.set(tx, -0.24 + 0.11 + h / 2, tz);
     group.add(leaves);
   });
 
-  // School building between the trees
-  const buildMat = new THREE.MeshStandardMaterial({ color: 0x8a7a6a, roughness: 0.85 });
-  const building = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.38, 0.28), buildMat);
-  building.position.set(0.12, -0.16, 0.05);
-  group.add(building);
-
-  const roofMat = new THREE.MeshStandardMaterial({ color: 0x5a4535, roughness: 0.8 });
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(0.44, 0.24, 4), roofMat);
-  roof.rotation.y = Math.PI / 4;
-  roof.position.set(0.12, 0.05, 0.05);
-  group.add(roof);
-
-  // Windows — slightly warm glow
-  const winMat = new THREE.MeshBasicMaterial({ color: 0xfff5c0 });
-  [-0.16, 0.16].forEach(x => {
-    const win = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.01), winMat);
-    win.position.set(0.12 + x, -0.16, 0.145);
-    group.add(win);
-  });
-  const winGlow = new THREE.PointLight(0xfff5a0, 0.6, 1.0);
-  winGlow.position.set(0.12, -0.16, 0.22);
-  group.add(winGlow);
-
-  // Door
-  const doorMat = new THREE.MeshBasicMaterial({ color: 0x3d2a18 });
-  const door = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.15, 0.01), doorMat);
-  door.position.set(0.12, -0.235, 0.145);
-  group.add(door);
-
-  // "FLOTTBEK" glowing pink text
   const flottbekTex = textTex(['FLOTTBEK'], {
     w: 512, h: 128, color: '#ff88bb',
     font: '300 68px Cormorant Garamond, Georgia, serif',
@@ -226,24 +222,25 @@ function buildFlottbek(group) {
     new THREE.PlaneGeometry(2.1, 0.52),
     new THREE.MeshBasicMaterial({ map: flottbekTex, transparent: true, side: THREE.DoubleSide }),
   );
-  flottbekMesh.position.set(0, 0.82, 0);
+  flottbekMesh.position.set(0, 0.85, 0);
   group.add(flottbekMesh);
 
-  // "erster kurs" small italic
-  const kursTexture = textTex(['erster kurs'], {
-    w: 320, h: 80, color: 'rgba(242,201,168,0.65)',
-    font: 'italic 300 34px Cormorant Garamond, Georgia, serif',
-  });
   const kursMesh = new THREE.Mesh(
     new THREE.PlaneGeometry(1.1, 0.27),
-    new THREE.MeshBasicMaterial({ map: kursTexture, transparent: true, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({
+      map: textTex(['erster kurs'], {
+        w: 320, h: 80, color: 'rgba(242,201,168,0.65)',
+        font: 'italic 300 34px Cormorant Garamond, Georgia, serif',
+      }),
+      transparent: true, side: THREE.DoubleSide,
+    }),
   );
-  kursMesh.position.set(0, 0.4, 0);
+  kursMesh.position.set(0, 0.42, 0);
   group.add(kursMesh);
 
   function update(time) {
-    const pulse = 0.82 + Math.sin(time * 1.2) * 0.03;
-    flottbekMesh.position.y = pulse;
+    flottbekMesh.position.y = 0.85 + Math.sin(time * 1.2) * 0.03;
+    winGlow.intensity = 0.55 + Math.sin(time * 2.5) * 0.18;
   }
 
   return { mats, pointLight, update };
@@ -341,69 +338,93 @@ function buildAlster(group) {
 function buildCafe(group) {
   const { mats, pointLight } = makeBase(group, { color: 0x18100a, light: 0xf5c8a0 });
 
-  const ceramicMat  = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.4, metalness: 0.05 });
-  const coffeeMat   = new THREE.MeshBasicMaterial({ color: 0x3d1a08 });
-  const saucerColor = new THREE.MeshStandardMaterial({ color: 0xede8e0, roughness: 0.4 });
+  const ceramicMat = new THREE.MeshStandardMaterial({ color: 0xf5f0e8, roughness: 0.4, metalness: 0.05 });
+  const coffeeMat  = new THREE.MeshBasicMaterial({ color: 0x3d1a08 });
+  const saucerMat  = new THREE.MeshStandardMaterial({ color: 0xede8e0, roughness: 0.4 });
 
-  // Saucer
-  const saucer = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.35, 0.04, 32), saucerColor);
-  saucer.position.y = -0.22;
-  group.add(saucer);
+  // Build one cup at xPos, return steam data
+  function addCup(xPos) {
+    const saucer = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.21, 0.03, 32), saucerMat.clone());
+    saucer.position.set(xPos, -0.22, 0);
+    group.add(saucer);
 
-  // Cup
-  const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.16, 0.28, 32), ceramicMat);
-  cup.position.y = -0.04;
-  group.add(cup);
+    const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.12, 0.21, 32), ceramicMat.clone());
+    cup.position.set(xPos, -0.075, 0);
+    group.add(cup);
 
-  // Coffee surface
-  const coffeeDisc = new THREE.Mesh(new THREE.CircleGeometry(0.185, 32), coffeeMat);
-  coffeeDisc.rotation.x = -Math.PI / 2;
-  coffeeDisc.position.y = 0.1;
-  group.add(coffeeDisc);
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(0.135, 32), coffeeMat.clone());
+    disc.rotation.x = -Math.PI / 2;
+    disc.position.set(xPos, 0.03, 0);
+    group.add(disc);
 
-  // Cup handle
-  const handleGeo = new THREE.TorusGeometry(0.1, 0.025, 8, 20, Math.PI);
-  const handle    = new THREE.Mesh(handleGeo, ceramicMat);
-  handle.position.set(0.24, -0.04, 0);
-  handle.rotation.y = Math.PI / 2;
-  group.add(handle);
+    const handle = new THREE.Mesh(
+      new THREE.TorusGeometry(0.072, 0.018, 8, 18, Math.PI),
+      ceramicMat.clone(),
+    );
+    handle.position.set(xPos + 0.16, -0.075, 0);
+    handle.rotation.y = Math.PI / 2;
+    group.add(handle);
 
-  // Steam particles (4 spheres that float up)
-  const steamMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18 });
-  const steams   = [];
-  for (let i = 0; i < 4; i++) {
-    const s = new THREE.Mesh(new THREE.SphereGeometry(0.04 + i * 0.012, 8, 8), steamMat.clone());
-    s.position.set((i - 1.5) * 0.06, 0.18 + i * 0.1, 0);
-    group.add(s);
-    steams.push({ mesh: s, offset: i * Math.PI * 0.5 });
+    // Steam — 3 wisps per cup
+    const steams = [];
+    for (let i = 0; i < 3; i++) {
+      const baseX = xPos + (i - 1) * 0.04;
+      const s = new THREE.Mesh(
+        new THREE.SphereGeometry(0.025 + i * 0.008, 6, 6),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0 }),
+      );
+      s.position.set(baseX, 0.05, 0);
+      group.add(s);
+      steams.push({ mesh: s, baseX, offset: i * (Math.PI * 2 / 3) });
+    }
+    return steams;
   }
 
-  // Floating heart
+  const steamsL = addCup(-0.38);
+  const steamsR = addCup( 0.38);
+  const allSteams = [...steamsL, ...steamsR];
+
+  // Him — dark sphere to the left of left cup
+  const himMat  = new THREE.MeshBasicMaterial({ color: 0x1a1a3a });
+  const himBody = new THREE.Mesh(new THREE.SphereGeometry(0.1, 14, 14), himMat);
+  himBody.position.set(-0.78, -0.06, 0);
+  group.add(himBody);
+
+  // Her — pink sphere to the right of right cup
+  const herMat  = new THREE.MeshBasicMaterial({ color: 0xff6699 });
+  const herBody = new THREE.Mesh(new THREE.SphereGeometry(0.1, 14, 14), herMat);
+  herBody.position.set(0.78, -0.06, 0);
+  group.add(herBody);
+
+  const herLight = new THREE.PointLight(0xff99cc, 1.0, 1.2);
+  herLight.position.set(0.78, -0.06, 0.1);
+  group.add(herLight);
+
+  // Floating heart between the cups
   const heartShape = new THREE.Shape();
   heartShape.moveTo(0, 0);
-  heartShape.bezierCurveTo( 0,  0.07, -0.14,  0.07, -0.14, 0);
-  heartShape.bezierCurveTo(-0.14, -0.1, 0, -0.18, 0, -0.24);
-  heartShape.bezierCurveTo( 0, -0.18,  0.14, -0.1,  0.14, 0);
-  heartShape.bezierCurveTo( 0.14, 0.07,  0, 0.07,  0, 0);
-  const heartGeo = new THREE.ShapeGeometry(heartShape);
+  heartShape.bezierCurveTo( 0,  0.06, -0.11,  0.06, -0.11, 0);
+  heartShape.bezierCurveTo(-0.11, -0.08, 0, -0.16, 0, -0.20);
+  heartShape.bezierCurveTo( 0, -0.16,  0.11, -0.08,  0.11, 0);
+  heartShape.bezierCurveTo( 0.11, 0.06,  0, 0.06,  0, 0);
   const heartMat = new THREE.MeshBasicMaterial({
     color: 0xff6688, transparent: true, opacity: 0.85, side: THREE.DoubleSide,
   });
-  const floatHeart = new THREE.Mesh(heartGeo, heartMat);
-  floatHeart.position.set(0, 0.62, 0);
+  const floatHeart = new THREE.Mesh(new THREE.ShapeGeometry(heartShape), heartMat);
+  floatHeart.position.set(0, 0.55, 0);
   group.add(floatHeart);
 
   function update(time) {
-    // Steam float up and fade
-    steams.forEach(({ mesh, offset }) => {
-      const t = ((time * 0.55 + offset) % 1);
-      mesh.position.y     = 0.15 + t * 0.55;
-      mesh.material.opacity = (t < 0.5 ? t * 2 : (1 - t) * 2) * 0.22;
-      mesh.position.x     = Math.sin(time * 0.8 + offset) * 0.05;
+    allSteams.forEach(({ mesh, baseX, offset }) => {
+      const t = ((time * 0.5 + offset) % 1);
+      mesh.position.y       = 0.05 + t * 0.45;
+      mesh.material.opacity = (t < 0.5 ? t * 2 : (1 - t) * 2) * 0.2;
+      mesh.position.x       = baseX + Math.sin(time * 0.9 + offset) * 0.03;
     });
 
-    floatHeart.position.y = 0.62 + Math.sin(time * 1.8) * 0.07;
-    heartMat.opacity      = 0.6 + Math.sin(time * 2.2) * 0.28;
+    floatHeart.position.y = 0.55 + Math.sin(time * 1.8) * 0.07;
+    heartMat.opacity      = 0.6 + Math.sin(time * 2.2) * 0.27;
+    herLight.intensity    = 0.8 + Math.sin(time * 1.5) * 0.25;
   }
 
   return { mats, pointLight, update };
@@ -452,41 +473,63 @@ function buildKunsthalle(group) {
   mats.push({ mat: frameMat,  target: 0.95 });
   mats.push({ mat: photoMat,  target: 1.0 });
 
-  // Sparkle sprites floating around the photo
+  // White "developing" overlay — fades away to reveal the photo (like a Polaroid)
+  const devMat = new THREE.MeshBasicMaterial({
+    color: 0xfff8f2, transparent: true, opacity: 1.0, side: THREE.DoubleSide,
+  });
+  const devOverlay = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), devMat);
+  devOverlay.position.set(0, 0.82, 0.025);
+  group.add(devOverlay);
+
+  // Sparkle sprites
   const sparkles = [];
   for (let i = 0; i < 10; i++) {
     const sp = new THREE.Sprite(
       new THREE.SpriteMaterial({ color: 0xf2c9a8, transparent: true, opacity: 0 }),
     );
-    sp.scale.set(0.07, 0.07, 1);
+    sp.scale.set(0.08, 0.08, 1);
     sp.position.set(
-      (Math.random() - 0.5) * 3.2,
+      (Math.random() - 0.5) * 3.4,
       Math.random() * 2.8 - 0.2,
-      (Math.random() - 0.5) * 0.4,
+      (Math.random() - 0.5) * 0.3,
     );
     group.add(sp);
-    sparkles.push({ sp, offset: Math.random() * Math.PI * 2, speed: 0.25 + Math.random() * 0.35 });
+    sparkles.push({ sp, offset: Math.random() * Math.PI * 2, speed: 0.22 + Math.random() * 0.3 });
+  }
+
+  // Developing timer — reset on each show
+  let devStart = null;
+
+  function reset() {
+    devStart = null;
+    devMat.opacity = 1.0;
+    devOverlay.visible = true;
   }
 
   function update(time) {
-    // Gentle sway of the entire photo/frame
-    const sway = Math.sin(time * 0.22) * 0.032;
+    // Photo developing: white overlay fades away over 3.5 s
+    if (devStart === null) devStart = time;
+    const devT = Math.min((time - devStart) / 3.5, 1);
+    devMat.opacity = 1 - devT * devT * (3 - 2 * devT); // smoothstep fade
+
+    // Gentle sway after fully developed
+    const sway = Math.sin(time * 0.22) * 0.035 * devT;
     bloom.rotation.y = sway;
     frame.rotation.y = sway;
     photoMesh.rotation.y = sway;
+    devOverlay.rotation.y = sway;
 
-    // Bloom pulse
     bloomMat.opacity = 0.04 + Math.sin(time * 0.75) * 0.02;
 
-    // Sparkles drift upward and twinkle
+    // Sparkles only visible after photo has developed
     sparkles.forEach(({ sp, offset, speed }) => {
       sp.position.y += speed * 0.003;
       if (sp.position.y > 2.8) sp.position.y = -0.5;
-      sp.material.opacity = Math.max(0, Math.sin(time * 1.4 + offset)) * 0.45;
+      sp.material.opacity = Math.max(0, Math.sin(time * 1.4 + offset)) * 0.45 * devT;
     });
   }
 
-  return { mats, pointLight, update };
+  return { mats, pointLight, update, reset };
 }
 
 // ── Builder map ──────────────────────────────────────────────────────────────
