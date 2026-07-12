@@ -3,16 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>After We Met</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <link rel="stylesheet" href="css/style.css?v=5" />
+  <title>After We Met</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&family=Dancing+Script&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=6" />
 </head>
 <body>
-  <!-- Start screen: visible until first click -->
+
+  <!-- Start screen -->
   <div id="start-screen">
     <p>✦ &nbsp; touch to begin &nbsp; ✦</p>
   </div>
 
+  <!-- Title / finale screen -->
   <div id="title-screen">
     <h1>After We Met</h1>
     <blockquote>
@@ -23,12 +28,28 @@
     </blockquote>
   </div>
 
+  <!-- Memory overlay — polaroid card + weiter button -->
+  <div id="memory-overlay">
+    <div class="memory-card-wrapper">
+      <div id="mem-count-display" class="mem-count"></div>
+
+      <figure class="polaroid">
+        <div id="card-photo-area" class="card-photo">
+          <img id="memory-img" src="" alt="" crossorigin="anonymous" />
+          <span id="memory-icon" class="card-icon" aria-hidden="true"></span>
+        </div>
+        <figcaption id="memory-caption"></figcaption>
+      </figure>
+
+      <button id="weiter-btn">Weiter →</button>
+    </div>
+  </div>
+
   <canvas id="canvas"></canvas>
 
-  <!-- Memory navigation button (shown during MEMORIES phase) -->
-  <button id="weiter-btn">Weiter →</button>
+  <!-- Floating hint (touch the heart) -->
+  <!-- injected by storyboard.js -->
 
-  <!-- Three.js via CDN -->
   <script type="importmap">
     {
       "imports": {

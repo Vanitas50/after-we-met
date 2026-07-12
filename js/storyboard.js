@@ -11,7 +11,7 @@ export const PHASE = {
 };
 
 export function createStoryboard({ camera, heart, particles, audio, memories, onFinale }) {
-  let phase    = PHASE.IDLE;
+  let phase     = PHASE.IDLE;
   let phaseTime = 0;
 
   const p1 = _makeParticle(0xf2c9a8);
@@ -25,13 +25,18 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
 
   let currentMemoryIndex = -1;
 
-  const hint       = document.createElement('div');
-  hint.id          = 'hint';
+  // UI elements
+  const hint = document.createElement('div');
+  hint.id = 'hint';
   hint.textContent = '✦  touch the heart  ✦';
   document.body.appendChild(hint);
 
-  const memoryLabel = document.getElementById('memory-label');
-  const weiterBtn   = document.getElementById('weiter-btn');
+  const overlay    = document.getElementById('memory-overlay');
+  const memImg     = document.getElementById('memory-img');
+  const memCaption = document.getElementById('memory-caption');
+  const memCounter = document.getElementById('mem-count-display');
+  const memIcon    = document.getElementById('memory-icon');
+  const weiterBtn  = document.getElementById('weiter-btn');
 
   function _makeParticle(color) {
     const geo  = new THREE.SphereGeometry(0.09, 12, 12);
@@ -60,6 +65,38 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     phaseTime = 0;
   }
 
+  function _showMemoryCard(index) {
+    if (!overlay) return;
+
+    const photo   = memories.getPhoto(index);
+    const caption = memories.getCaption(index);
+    const color   = memories.getColor(index);
+    const icon    = memories.getIcon(index);
+
+    if (memImg) {
+      if (photo) {
+        memImg.src = photo;
+        memImg.style.display = 'block';
+      } else {
+        memImg.style.display = 'none';
+      }
+    }
+
+    // Icon + color background if no photo
+    const cardPhoto = document.getElementById('card-photo-area');
+    if (cardPhoto) {
+      cardPhoto.style.background = photo ? '' : color;
+      cardPhoto.dataset.icon = icon;
+      cardPhoto.setAttribute('data-icon', icon);
+    }
+
+    if (memCaption) memCaption.textContent = caption;
+    if (memCounter) memCounter.textContent = `${index + 1}  /  ${memories.count}`;
+    if (memIcon)    memIcon.textContent     = icon;
+
+    overlay.classList.add('visible');
+  }
+
   function _nextMemory() {
     currentMemoryIndex++;
 
@@ -68,18 +105,7 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
       return;
     }
 
-    memories.showMemory(currentMemoryIndex);
-
-    // Camera: same direction as memory but twice the distance so we look at it
-    const pos = memories.getPosition(currentMemoryIndex);
-    camTarget.set(pos.x * 2, 2.5, pos.z * 2);
-
-    if (memoryLabel) {
-      const label = memories.getLabel(currentMemoryIndex);
-      memoryLabel.innerHTML =
-        `<span class="mem-count">${currentMemoryIndex + 1} / ${memories.count}</span>${label}`;
-      memoryLabel.classList.add('visible');
-    }
+    _showMemoryCard(currentMemoryIndex);
 
     if (weiterBtn) {
       const isLast = currentMemoryIndex === memories.count - 1;
@@ -92,12 +118,11 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     phase     = PHASE.FINALE;
     phaseTime = 0;
     heart.close();
-    memories.hideAll();
     audio.fadeOutAmbient(3);
     camTarget.set(0, 0, 9);
 
-    if (weiterBtn)   weiterBtn.classList.remove('visible');
-    if (memoryLabel) memoryLabel.classList.remove('visible');
+    if (overlay)   overlay.classList.remove('visible');
+    if (weiterBtn) weiterBtn.classList.remove('visible');
 
     setTimeout(() => {
       const titleScreen = document.getElementById('title-screen');
@@ -116,7 +141,6 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
 
     phase     = PHASE.MEMORIES;
     phaseTime = 0;
-    camTarget.set(0, 1, 9);
 
     setTimeout(() => _nextMemory(), 1200);
   }
@@ -124,13 +148,13 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
   function handleWeiterClick() {
     if (phase !== PHASE.MEMORIES) return;
 
-    if (memoryLabel) memoryLabel.classList.remove('visible');
-    if (weiterBtn)   weiterBtn.classList.remove('visible');
+    if (overlay)   overlay.classList.remove('visible');
+    if (weiterBtn) weiterBtn.classList.remove('visible');
 
-    setTimeout(() => _nextMemory(), 700);
+    setTimeout(() => _nextMemory(), 800);
   }
 
-  function update(delta, scene) {
+  function update(delta, _scene) {
     phaseTime += delta;
 
     camera.position.lerp(camTarget, 0.025);
@@ -142,7 +166,6 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
         break;
 
       case PHASE.PARTICLES: {
-        // One clean, smooth sweep — no bouncing or misses
         const t    = Math.min(phaseTime / 1.8, 1);
         const ease = 1 - Math.pow(1 - t, 3);
         p1.position.set(-5 * (1 - ease),  0.3 * (1 - ease), 0);
@@ -166,7 +189,6 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
         const s = Math.min(phaseTime / 2, 1);
         heart.group.scale.setScalar(1 - Math.pow(1 - s, 3));
 
-        // Throttled particle burst (every 0.5 s)
         if (phaseTime % 0.5 < delta) particles.triggerHeartbeat();
 
         if (phaseTime > 2.2) {
@@ -199,7 +221,8 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
         break;
 
       case PHASE.MEMORIES:
-        if (Math.floor(phaseTime * 0.5) % 3 === 0 && phaseTime % 2 < delta * 2) {
+        // Heart pulses softly in background
+        if (Math.floor(phaseTime * 0.4) % 3 === 0 && phaseTime % 2.5 < delta * 2) {
           heart.triggerHeartbeat();
         }
         break;
