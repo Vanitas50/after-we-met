@@ -65,6 +65,8 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
     phaseTime = 0;
   }
 
+  const cardPhotoArea = document.getElementById('card-photo-area');
+
   function _showMemoryCard(index) {
     if (!overlay) return;
 
@@ -78,21 +80,22 @@ export function createStoryboard({ camera, heart, particles, audio, memories, on
         memImg.src = photo;
         memImg.style.display = 'block';
       } else {
+        memImg.src = '';
         memImg.style.display = 'none';
       }
     }
 
-    // Icon + color background if no photo
-    const cardPhoto = document.getElementById('card-photo-area');
-    if (cardPhoto) {
-      cardPhoto.style.background = photo ? '' : color;
-      cardPhoto.dataset.icon = icon;
-      cardPhoto.setAttribute('data-icon', icon);
+    if (cardPhotoArea) {
+      cardPhotoArea.style.background = photo ? '#000' : color;
+    }
+
+    if (memIcon) {
+      memIcon.textContent  = icon;
+      memIcon.style.display = photo ? 'none' : 'flex';
     }
 
     if (memCaption) memCaption.textContent = caption;
     if (memCounter) memCounter.textContent = `${index + 1}  /  ${memories.count}`;
-    if (memIcon)    memIcon.textContent     = icon;
 
     overlay.classList.add('visible');
   }

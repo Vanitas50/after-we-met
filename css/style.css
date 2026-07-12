@@ -169,10 +169,6 @@ body {
   pointer-events: none;
 }
 
-/* When photo exists, hide the icon overlay */
-.card-photo img[src]:not([src=""]) ~ .card-icon {
-  display: none;
-}
 
 .polaroid figcaption {
   font-family: 'Dancing Script', cursive;
