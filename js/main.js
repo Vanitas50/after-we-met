@@ -5,7 +5,7 @@ import { createHeart } from './heart.js';
 import { createParticles } from './particles.js';
 import { createMemories } from './memories/index.js';
 import { createStoryboard } from './storyboard.js';
-import { createAudio } from './audio.js';
+import { createAudio } from './audio.js?v=10';
 
 // ── Renderer ───────────────────────────────────────────────────────────────
 const canvas = document.getElementById('canvas');
