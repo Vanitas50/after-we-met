@@ -1,46 +1,45 @@
 /**
- * Audio manager — real MP3 ambient track + synthesized heartbeat sounds.
+ * Audio manager — MP3 via HTML Audio (mobile-safe) + synthesized heartbeat.
  */
 export function createAudio() {
-  let ctx          = null;
-  let masterGain   = null;
-  let ambientSrc   = null;
-  let started      = false;
+  let audioEl    = null;
+  let started    = false;
+  let fadeTimer  = null;
 
-  function ensureContext() {
+  // Web Audio context only needed for heartbeat sounds
+  let ctx = null;
+  function ensureCtx() {
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === 'suspended') ctx.resume();
   }
 
   async function startAmbient() {
-    ensureContext();
     if (started) return;
     started = true;
 
-    masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0, ctx.currentTime);
-    masterGain.connect(ctx.destination);
+    audioEl        = new Audio('audio/ambient.mp3');
+    audioEl.loop   = true;
+    audioEl.volume = 0;
 
     try {
-      const res    = await fetch('audio/ambient.mp3');
-      const raw    = await res.arrayBuffer();
-      const buffer = await ctx.decodeAudioData(raw);
-
-      ambientSrc        = ctx.createBufferSource();
-      ambientSrc.buffer = buffer;
-      ambientSrc.loop   = true;
-      ambientSrc.connect(masterGain);
-      ambientSrc.start(0);
-
-      // Gentle fade-in over 4 seconds
-      masterGain.gain.linearRampToValueAtTime(0.55, ctx.currentTime + 4);
+      await audioEl.play(); // must be called directly inside user gesture chain
     } catch (e) {
-      console.warn('Audio load failed:', e);
+      console.warn('Audio play failed:', e);
+      return;
     }
+
+    // Fade in over ~5 seconds
+    let vol = 0;
+    const TARGET = 0.55;
+    fadeTimer = setInterval(() => {
+      vol = Math.min(vol + 0.012, TARGET);
+      audioEl.volume = vol;
+      if (vol >= TARGET) { clearInterval(fadeTimer); fadeTimer = null; }
+    }, 100);
   }
 
   function heartbeat() {
-    ensureContext();
+    ensureCtx();
     const osc  = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -60,8 +59,18 @@ export function createAudio() {
   }
 
   function fadeOutAmbient(duration = 3) {
-    if (!masterGain || !ctx) return;
-    masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+    if (!audioEl) return;
+    if (fadeTimer) { clearInterval(fadeTimer); fadeTimer = null; }
+    const steps = duration * 10;
+    const dec   = audioEl.volume / steps;
+    fadeTimer = setInterval(() => {
+      audioEl.volume = Math.max(0, audioEl.volume - dec);
+      if (audioEl.volume <= 0) {
+        clearInterval(fadeTimer);
+        fadeTimer = null;
+        audioEl.pause();
+      }
+    }, 100);
   }
 
   return { startAmbient, heartbeat, heartbeatDouble, fadeOutAmbient };
