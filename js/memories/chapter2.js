@@ -25,118 +25,82 @@ function addLight(group, mats, who, x, y, z) {
 // ── Das Versprechen ──────────────────────────────────────────────────────────
 function buildVersprechen(group) {
   const { mats, pointLight } = makeBase(group, { color: 0x0c0a1c, light: 0xf5c8a0 });
+  const fade = (mat, target) => { mats.push({ mat, target }); return mat; };
+  const std = (color, target = 1) => fade(new THREE.MeshStandardMaterial({ color, roughness: 0.85, transparent: true, opacity: 0 }), target);
 
-  // Crescent moon: outer circle arc + inner ellipse arc that share both tips
+  // Crescent moon outside, on the side of the room's window
   const R = 0.2;
   const moonShape = new THREE.Shape();
   moonShape.moveTo(0, R);
-  moonShape.absarc(0, 0, R, Math.PI / 2, Math.PI * 1.5, false);      // outer edge, left side
-  moonShape.absellipse(0, 0, R * 0.45, R, Math.PI * 1.5, Math.PI / 2, true); // inner edge back up
-  const moonMat = new THREE.MeshBasicMaterial({ color: 0xfff1c8, transparent: true, opacity: 0, side: THREE.DoubleSide });
-  mats.push({ mat: moonMat, target: 0.95 });
+  moonShape.absarc(0, 0, R, Math.PI / 2, Math.PI * 1.5, false);
+  moonShape.absellipse(0, 0, R * 0.45, R, Math.PI * 1.5, Math.PI / 2, true);
+  const moonMat = fade(new THREE.MeshBasicMaterial({ color: 0xfff1c8, transparent: true, opacity: 0, side: THREE.DoubleSide }), 0.95);
   const moon = new THREE.Mesh(new THREE.ShapeGeometry(moonShape, 32), moonMat);
   moon.position.set(-1.15, 0.55, -0.4);
   moon.rotation.z = -0.35;
   group.add(moon);
-  // soft moonlight halo behind it
-  const moonGlowMat = new THREE.SpriteMaterial({ map: circleTex(255, 236, 200), transparent: true, opacity: 0, depthWrite: false });
-  mats.push({ mat: moonGlowMat, target: 0.3 });
+  const moonGlowMat = fade(new THREE.SpriteMaterial({ map: circleTex(255, 236, 200), transparent: true, opacity: 0, depthWrite: false }), 0.3);
   const moonGlow = new THREE.Sprite(moonGlowMat);
   moonGlow.scale.set(0.75, 0.75, 1);
   moonGlow.position.set(-1.2, 0.55, -0.45);
   group.add(moonGlow);
 
-  // Her home: a cut-open room (front side open towards the camera), warm inside
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x5a3a4e, roughness: 0.85, transparent: true, opacity: 0 });
-  mats.push({ mat: wallMat, target: 1 });
-  const floorMat = new THREE.MeshStandardMaterial({ color: 0x3a2633, roughness: 0.9, transparent: true, opacity: 0 });
-  mats.push({ mat: floorMat, target: 1 });
-  const homeRoofMat = new THREE.MeshStandardMaterial({ color: 0x3a2c4a, roughness: 0.9, transparent: true, opacity: 0 });
-  mats.push({ mat: homeRoofMat, target: 1 });
-  const HX = -0.25; // room centre x
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.04, 0.7), floorMat);
-  floor.position.set(HX, -0.34, 0.1);
-  group.add(floor);
-  const back = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.62, 0.04), wallMat);
-  back.position.set(HX, -0.03, -0.25);
-  group.add(back);
-  const left = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.62, 0.7), wallMat);
-  left.position.set(HX - 0.5, -0.03, 0.1);
-  group.add(left);
-  const right = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.62, 0.7), wallMat);
-  right.position.set(HX + 0.5, -0.03, 0.1);
-  group.add(right);
-  const homeRoof = new THREE.Mesh(new THREE.ConeGeometry(0.78, 0.3, 4), homeRoofMat);
-  homeRoof.position.set(HX, 0.43, 0.1);
-  homeRoof.rotation.y = Math.PI / 4;
-  homeRoof.scale.set(1, 1, 0.72);
-  group.add(homeRoof);
-  // night window in the back wall (the moon side of the sky)
-  const nightWinMat = new THREE.MeshBasicMaterial({ color: 0x22305e, transparent: true, opacity: 0 });
-  mats.push({ mat: nightWinMat, target: 1 });
-  const nightWin = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.18), nightWinMat);
-  nightWin.position.set(HX - 0.2, 0.08, -0.228);
-  group.add(nightWin);
-  // warm lamp light inside the room
-  const roomLight = new THREE.PointLight(0xffc89a, 1.4, 1.6);
-  roomLight.position.set(HX, 0.15, 0.05);
-  group.add(roomLight);
+  // Her room: cut open towards the camera, turned a little so the left
+  // (moon-side) wall with the window faces the viewer
+  const room = new THREE.Group();
+  room.position.set(-0.15, 0.08, -0.1);
+  room.rotation.y = -0.45;
+  room.scale.setScalar(1.3);
+  group.add(room);
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); room.add(m); return m; };
 
-  // The two of them inside, close together
-  const him = addLight(group, mats, 'him', HX - 0.13, -0.17, 0.12);
-  const her = addLight(group, mats, 'her', HX + 0.13, -0.17, 0.12);
-
-  // Mama's house
-  const houseMat = new THREE.MeshStandardMaterial({ color: 0x2b2238, roughness: 0.9, transparent: true, opacity: 0 });
-  mats.push({ mat: houseMat, target: 1 });
-  const house = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.34, 0.29), houseMat);
-  house.position.set(1.05, -0.17, -0.7);
-  group.add(house);
-
-  const roofMat = new THREE.MeshStandardMaterial({ color: 0x3a2c4a, roughness: 0.9, transparent: true, opacity: 0 });
-  mats.push({ mat: roofMat, target: 1 });
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(0.27, 0.2, 4), roofMat);
-  roof.position.set(1.05, 0.1, -0.7);
+  const wallMat = std(0x5a3a4e);
+  add(new THREE.BoxGeometry(1.0, 0.04, 0.7), std(0x3a2633), 0, -0.34, 0);      // floor
+  add(new THREE.BoxGeometry(1.0, 0.62, 0.04), wallMat, 0, -0.03, -0.35);        // back wall
+  add(new THREE.BoxGeometry(0.04, 0.62, 0.7), wallMat, -0.5, -0.03, 0);         // left wall (moon side)
+  add(new THREE.BoxGeometry(0.04, 0.62, 0.7), wallMat, 0.5, -0.03, 0);          // right wall
+  const roof = add(new THREE.ConeGeometry(0.78, 0.3, 4), std(0x3a2c4a), 0, 0.43, 0);
   roof.rotation.y = Math.PI / 4;
-  group.add(roof);
+  roof.scale.set(1, 1, 0.72);
 
-  const windowMat = new THREE.MeshBasicMaterial({ color: 0xffc27a, transparent: true, opacity: 0 });
-  mats.push({ mat: windowMat, target: 0 });
-  const win = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1), windowMat);
-  win.position.set(1.05, -0.13, -0.554);
-  group.add(win);
+  // Window in the left wall, looking out to the moon (night sky + cross bars)
+  const glass = add(new THREE.PlaneGeometry(0.26, 0.22),
+    fade(new THREE.MeshBasicMaterial({ color: 0x24346e, transparent: true, opacity: 0, side: THREE.DoubleSide }), 1),
+    -0.477, 0.04, -0.02);
+  glass.rotation.y = Math.PI / 2;
+  const barMat = fade(new THREE.MeshBasicMaterial({ color: 0x3a2433, transparent: true, opacity: 0, side: THREE.DoubleSide }), 1);
+  const vBar = add(new THREE.PlaneGeometry(0.018, 0.22), barMat, -0.475, 0.04, -0.02);
+  vBar.rotation.y = Math.PI / 2;
+  const hBar = add(new THREE.PlaneGeometry(0.26, 0.018), barMat, -0.475, 0.04, -0.02);
+  hBar.rotation.y = Math.PI / 2;
+  const moonLight = new THREE.PointLight(0x9fb4ff, 0.6, 1.2);
+  moonLight.position.set(-0.4, 0.05, 0);
+  room.add(moonLight);
 
-  const windowLight = new THREE.PointLight(0xffc27a, 0, 1.2);
-  windowLight.position.set(1.05, -0.13, -0.554);
-  group.add(windowLight);
+  // Bed along the back wall
+  add(new THREE.BoxGeometry(0.62, 0.1, 0.34), std(0x4a2f3f), 0.05, -0.27, -0.15);   // frame
+  add(new THREE.BoxGeometry(0.6, 0.06, 0.32), std(0xeadfe6), 0.05, -0.19, -0.15);   // mattress
+  add(new THREE.BoxGeometry(0.38, 0.025, 0.33), std(0xd47a9c), 0.15, -0.15, -0.15); // blanket
+  add(new THREE.BoxGeometry(0.13, 0.05, 0.22), std(0xf6eef3), -0.17, -0.14, -0.15); // pillow
+  add(new THREE.BoxGeometry(0.04, 0.24, 0.34), std(0x4a2f3f), -0.26, -0.15, -0.15); // headboard
 
-  // Thread of light from him to the window
-  const curve = new THREE.QuadraticBezierCurve3(
-    new THREE.Vector3(HX - 0.13, -0.1, 0.12),
-    new THREE.Vector3(0.55, 0.62, -0.1),
-    new THREE.Vector3(1.05, -0.13, -0.55),
-  );
-  const threadMat = new THREE.MeshBasicMaterial({ color: 0xffd9b0, transparent: true, opacity: 0 });
-  mats.push({ mat: threadMat, target: 0.7 });
-  const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, 0.008, 6, false), threadMat);
-  group.add(tube);
+  // Warm lamp light in the room
+  const roomLight = new THREE.PointLight(0xffc89a, 1.3, 1.6);
+  roomLight.position.set(0.2, 0.15, 0.05);
+  room.add(roomLight);
 
-  let t0 = null;
-  function reset() { t0 = null; }
+  // The two of them, sitting side by side on the edge of the bed
+  const him = addLight(room, mats, 'him', -0.02, -0.11, 0.0);
+  const her = addLight(room, mats, 'her', 0.14, -0.11, 0.0);
+  // smaller here so the bed stays readable behind them
+  him.body.scale.setScalar(0.6);
+  her.body.scale.setScalar(0.6);
+
+  function reset() {}
 
   function update(time) {
-    if (t0 === null) t0 = time;
-    const e = time - t0;
-
-    const grow = Math.min(Math.max((e - 1.5) / 3.0, 0), 1);
-    tube.geometry.setDrawRange(0, Math.floor(tube.geometry.index.count * grow / 6) * 6);
-
-    const glow = Math.min(Math.max((e - 4.5) / 1.5, 0), 1);
-    windowMat.opacity = glow * 0.95;
-    windowLight.intensity = glow * 1.4;
-
+    roomLight.intensity = 1.2 + Math.sin(time * 0.8) * 0.15;
     her.light.intensity = 0.9 + Math.sin(time * 1.5) * 0.25;
-    roomLight.intensity = 1.25 + Math.sin(time * 0.8) * 0.15;
   }
 
   return { mats, pointLight, update, reset };
