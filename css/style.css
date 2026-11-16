@@ -192,3 +192,9 @@ body {
   from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* Kapitel II: label and button sit lower so they never cover the two lights */
+body.k2 #memory-label { bottom: calc(9vh + env(safe-area-inset-bottom)); }
+body.k2 #weiter-btn { bottom: calc(2.5vh + env(safe-area-inset-bottom)); }
+
+#weiter-btn { white-space: nowrap; }

@@ -4,8 +4,12 @@ import { createWorld } from './world.js';
 import { createHeart } from './heart.js';
 import { createParticles } from './particles.js';
 import { createMemories } from './memories/index.js';
+import { CHAPTER2_DEFS } from './memories/chapter2.js';
 import { createStoryboard } from './storyboard.js';
 import { createAudio } from './audio.js?v=10';
+
+// Kapitel II lives at ?kapitel=2 — chapter 1 stays untouched at the plain URL.
+const CHAPTER = new URLSearchParams(location.search).get('kapitel') === '2' ? 2 : 1;
 
 // ── Renderer ───────────────────────────────────────────────────────────────
 const canvas = document.getElementById('canvas');
@@ -56,7 +60,15 @@ scene.add(fillLight);
 const world     = createWorld(scene);
 const heartSys  = createHeart(scene);
 const particles = createParticles(scene);
-const memories  = createMemories(scene);
+const memories  = createMemories(scene, CHAPTER === 2 ? CHAPTER2_DEFS : undefined);
+if (CHAPTER === 2) {
+  document.body.classList.add('k2');
+  document.title = 'After We Met · II';
+  const titleScreen = document.getElementById('title-screen');
+  titleScreen.querySelector('h1').textContent = 'Kapitel II';
+  titleScreen.querySelector('blockquote').innerHTML =
+    'Eine Stunde habe ich deine Tür gesucht.<br>Heute finde ich immer zu dir.';
+}
 const audio     = createAudio();
 
 // Heart starts hidden until the HEART_FORM phase

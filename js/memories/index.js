@@ -3,7 +3,7 @@ import * as THREE from 'three';
 const RADIUS = 5;
 
 // ── Circular glow texture (for sprites) ──────────────────────────────────────
-function circleTex(r, g, b) {
+export function circleTex(r, g, b) {
   const c = document.createElement('canvas');
   c.width = c.height = 32;
   const ctx = c.getContext('2d');
@@ -17,7 +17,7 @@ function circleTex(r, g, b) {
 }
 
 // ── Canvas text helper ────────────────────────────────────────────────────────
-function textTex(lines, { w = 512, h = 256, bg = 'transparent', color = '#f2c9a8',
+export function textTex(lines, { w = 512, h = 256, bg = 'transparent', color = '#f2c9a8',
   font = '300 52px Cormorant Garamond, Georgia, serif', align = 'center',
   glow = null, lineHeight = 1.35 } = {}) {
   const c   = document.createElement('canvas');
@@ -44,7 +44,7 @@ function textTex(lines, { w = 512, h = 256, bg = 'transparent', color = '#f2c9a8
 }
 
 // ── Island base shared helper ────────────────────────────────────────────────
-function makeBase(group, { color = 0x1a0a2e, light = 0xf5c8a0 } = {}) {
+export function makeBase(group, { color = 0x1a0a2e, light = 0xf5c8a0 } = {}) {
   const mats = [];
 
   const baseMat = new THREE.MeshStandardMaterial({
@@ -693,9 +693,9 @@ function createMemory(scene, def, position) {
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
-export function createMemories(scene) {
-  const dioramas = MEMORY_DEFS.map((def, i) => {
-    const a   = (i / MEMORY_DEFS.length) * Math.PI * 2;
+export function createMemories(scene, defs = MEMORY_DEFS) {
+  const dioramas = defs.map((def, i) => {
+    const a   = (i / defs.length) * Math.PI * 2;
     const pos = new THREE.Vector3(Math.cos(a) * RADIUS, -0.5, Math.sin(a) * RADIUS);
     return createMemory(scene, def, pos);
   });
